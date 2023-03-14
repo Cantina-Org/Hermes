@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cantina - Hermes</title>
+    <script type="text/javascript" charset="utf-8">
+        let socket = io();
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+        socket.on('message', () => {
+            console.log('messageeee')
+        })
+    </script>
+</head>
+<body>
+    <h1>Hello World</h1>
+</body>
+</html>
