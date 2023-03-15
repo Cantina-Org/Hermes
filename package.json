@@ -1,0 +1,29 @@
+{
+  "name": "hermes",
+  "version": "0.0.1",
+  "description": "Un système de messagerie de la suite Cantina",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cantina-Org/Hermes.git"
+  },
+  "author": "Cantina",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cantina-Org/Hermes/issues"
+  },
+  "homepage": "https://github.com/Cantina-Org/Hermes#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "mariadb": "^3.1.0",
+    "mysql": "^2.18.1",
+    "os": "^0.1.2",
+    "socket.io": "^4.6.1"
+  }
+}

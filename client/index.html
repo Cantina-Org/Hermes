@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cantina - Hermes</title>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        let socket = io();
+        socket.on('connect', function() {
+            socket.emit('login', {userToken: 'f899c755-a1f2-35cc-81d2-02d90db2816f'});
+        });
+        socket.on('message', () => {
+            console.log('messageeee')
+        })
+        socket.on('redirect', (destination) => {
+            window.location.href = destination;
+        });
+    </script>
+</head>
+<body>
+    <h1>Hello World</h1>
+    <script src="socket.io/socket.io.js"></script>
+</body>
+</html>
