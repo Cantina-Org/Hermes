@@ -2,11 +2,10 @@ import { networkInterfaces } from 'os';
 import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-
-const mysql = require('mysql');
+import { createConnection} from "mysql";
 
 function queryDatabase(query, callback) {
-    const connection = mysql.createConnection({
+    const connection = createConnection({
         host: 'localhost',
         user: 'cantina',
         password: 'LeMdPDeTest',
@@ -18,13 +17,14 @@ function queryDatabase(query, callback) {
             return;
         }
         console.log('Connexion à la base de données réussie!');
-        connection.query(query, (error, results, fields) => {
+        connection.query(query, (error, results) => {
             if (error) {
                 console.error('Erreur lors de l\'exécution de la requête:', error);
                 return;
             }
-            console.log('Résultats de la requête:', results);
-            callback(results);
+            let finalResults = JSON.parse(JSON.stringify(results))
+            console.log('Résultats de la requête:', finalResults);
+            callback(finalResults);
             connection.end((err) => {
                 if (err) {
                     console.error('Erreur lors de la fermeture de la connexion à la base de données:', err);
@@ -53,15 +53,16 @@ serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
     let logged = false;
     socket.on('message', (data) => {
+        console.log(logged)
         if (!logged) {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         }
-        console.log(data.data);
+        console.log(data);
     });
     socket.on('login', (data) => {
-       queryDatabase(`SELECT * FROM cantina_administration.user WHERE token=${data.userToken}`, (results) => {
-           console.log(results)
+       queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
+           console.log('Not Raw Data: ' + results)
        })
         console.log(data)
     });
