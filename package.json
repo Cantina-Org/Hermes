@@ -2,7 +2,7 @@
   "name": "hermes",
   "version": "0.0.1",
   "description": "Un système de messagerie de la suite Cantina",
-  "main": "index.js",
+  "main": "client/js/index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
