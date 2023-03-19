@@ -23,7 +23,6 @@ function queryDatabase(query, callback) {
                 return;
             }
             let finalResults = JSON.parse(JSON.stringify(results))
-            console.log('Résultats de la requête:', finalResults);
             callback(finalResults);
             connection.end((err) => {
                 if (err) {
@@ -36,6 +35,32 @@ function queryDatabase(query, callback) {
     });
 }
 
+function prettyTime() {
+    const time = new Date();
+
+    const hours = time.getHours().toString().padStart(2, '0');
+    const minutes = time.getMinutes().toString().padStart(2, '0');
+    const seconds = time.getSeconds().toString().padStart(2, '0');
+
+    return hours+':'+minutes+':'+seconds
+}
+
+function sendMessage(socket, message, time, author) {
+    let data = {
+        content: message,
+        time: time,
+        author: author,
+        isMine: socket.token === author
+    };
+    socket.emit('message', data)
+}
+
+async function broadcast(message, time, author) {
+    const sockets = await serverSocket.of('/').sockets;
+    for (let sock of sockets){
+        sendMessage(sock, message, time, author);
+    }
+}
 
 // Constante pour les serveurs
 const port = 3002;
@@ -51,19 +76,30 @@ serverExpress.use(express.static("../client/"));
 // Web Socket:
 serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
-    let logged = false;
+    socket.logged = false;
+    socket.token = null;
     socket.on('message', (data) => {
-        console.log(logged)
-        if (!logged) {
+        if (!socket.logged) {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
+        } else {
+            broadcast(data.content, prettyTime(), socket.token);
         }
         console.log(data);
     });
     socket.on('login', (data) => {
        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
-           console.log('Not Raw Data: ' + results)
-       })
+           if (results.length === 0) {
+               socket.emit('error', data={
+                   name: "User Not Found",
+                   code: 404
+               });
+           }
+           else {
+               socket.logged = true;
+               socket.token = data.userToken;
+           }
+       });
         console.log(data)
     });
 });
