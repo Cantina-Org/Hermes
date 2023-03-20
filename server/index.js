@@ -3,6 +3,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
+import { resolve } from 'path';
+
 
 function queryDatabase(query, callback) {
     const connection = createConnection({
@@ -41,51 +43,55 @@ function prettyTime() {
     const hours = time.getHours().toString().padStart(2, '0');
     const minutes = time.getMinutes().toString().padStart(2, '0');
     const seconds = time.getSeconds().toString().padStart(2, '0');
+    const day = time.getDay().toString().padStart(2, '0');
+    const month = time.getMonth().toString().padStart(2, '0');
+    const year = time.getFullYear().toString().padStart(2, '0');
 
-    return hours+':'+minutes+':'+seconds
+    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds
 }
 
-function sendMessage(socket, message, time, author) {
-    let data = {
+function sendMessage(socket, message, time, author, sendTo) {
+    let data  = {
         content: message,
         time: time,
         author: author,
-        isMine: socket.token === author
-    };
-    socket.emit('message', data)
+        isMine: sendTo === author
+    }
+    socket.emit('message', data);
 }
 
 async function broadcast(message, time, author) {
-    const sockets = await serverSocket.of('/').sockets;
-    for (let sock of sockets){
-        sendMessage(sock, message, time, author);
+    for (let element of userLogged){
+        sendMessage(element.sock, message, time, author, element.userName);
     }
 }
 
 // Constante pour les serveurs
 const port = 3002;
 const address = networkInterfaces()['wlo1'][0].address;
+const userLogged = [];
+let id = 0;
 
 // Création des serveurs
 const serverExpress = express();
 const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
-serverExpress.use(express.static("../client/"));
+// serverExpress.use(express.static("../client/"));
 
 // Web Socket:
 serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
-    socket.logged = false;
-    socket.token = null;
+    let logged = false;
+    let token = null;
+    let userName = null;
     socket.on('message', (data) => {
-        if (!socket.logged) {
+        if (!logged) {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         } else {
-            broadcast(data.content, prettyTime(), socket.token);
+            broadcast(data.content, prettyTime(), userName.user_name);
         }
-        console.log(data);
     });
     socket.on('login', (data) => {
        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
@@ -96,8 +102,16 @@ serverSocket.on('connection', (socket) => {
                });
            }
            else {
-               socket.logged = true;
-               socket.token = data.userToken;
+               logged = true;
+               token = data.userToken;
+               userName = results[0];
+               id++;
+               userLogged.push({
+                   id: id,
+                   sock: socket,
+                   token: data.userToken,
+                   userName: results[0],
+               });
            }
        });
         console.log(data)
@@ -106,4 +120,28 @@ serverSocket.on('connection', (socket) => {
 
 serverHTTP.listen(port, () => {
     console.log(`Écoute en cours sur: ${address}:${port}`);
+});
+serverExpress.get('/', (request, response) => {
+    response.sendFile(resolve('../client/index.html'));
+});
+
+serverExpress.get('/login', (request, response) => {
+    response.sendFile(resolve('../client/login.html'));
+});
+
+serverExpress.get('/js/:fileName', (request, response) => {
+    response.sendFile(resolve('../client/js/' + request.params.fileName));
+});
+
+serverExpress.get('/css/:fileName', (request, response) => {
+    response.sendFile(resolve('../client/css/' + request.params.fileName));
+});
+
+serverExpress.post('/login', (requests) => {
+    let username = requests.body.username;
+    let password = requests.body.password;
+
+    if (username && password) {
+
+    }
 });

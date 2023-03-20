@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Cantina - Hermes</title>
@@ -7,7 +7,21 @@
     <script type="text/javascript" charset="utf-8" src="js/index.js"></script>
 </head>
 <body>
-    <h1>Hello World</h1>
-    <script src="socket.io/socket.io.js"></script>
+    <h1>Cantina</h1>
+    <div id="message-feed">
+    </div>
+    <form id="message-form" class="input-wrapper" autocomplete="off">
+        <div class="input-bar">
+            <label for="message-input">Message: </label><input
+                    id="message-input"
+                    type="text"
+                    placeholder="Write something..."
+                    required
+            />
+            <button type="submit" class="input-button">
+                <img src="#" alt="Le bouton d'envoie du message" id="message-send" style="--primary-color: #444444; --secondary-color: #2e2b2b;" />
+            </button>
+        </div>
+    </form>
 </body>
 </html>
