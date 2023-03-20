@@ -9,3 +9,17 @@ socket.on('message', (data) => {
 socket.on('redirect', (destination) => {
     window.location.href = destination;
 });
+
+addEventListener('submit', (event) => {
+    event.preventDefault();
+    const messageInput = document.getElementById('message-input')
+
+
+    const msg = {
+        content: messageInput.value,
+    }
+    if (msg !== '') {
+        socket.emit('message', msg);
+        messageInput.value = '';
+    }
+});
