@@ -10,7 +10,11 @@ socket.on('message', (data) => {
 socket.on('redirect', (destination) => {
     window.location.href = destination;
 });
-
+socket.on('error', (data) => {
+   if (data.code === 404 && data.name === 'User Not Found'){
+       window.location.href = '/login.html';
+   }
+});
 
 addEventListener('submit', (event) => {
     event.preventDefault();

@@ -3,6 +3,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
+import { resolve } from 'path';
+
 
 function queryDatabase(query, callback) {
     const connection = createConnection({
@@ -55,7 +57,6 @@ function sendMessage(socket, message, time, author, sendTo) {
         author: author,
         isMine: sendTo === author
     }
-    console.log(data)
     socket.emit('message', data);
 }
 
@@ -76,7 +77,7 @@ const serverExpress = express();
 const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
-serverExpress.use(express.static("../client/"));
+// serverExpress.use(express.static("../client/"));
 
 // Web Socket:
 serverSocket.on('connection', (socket) => {
@@ -89,9 +90,8 @@ serverSocket.on('connection', (socket) => {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         } else {
-            broadcast(data.content, prettyTime(), userName);
+            broadcast(data.content, prettyTime(), userName.user_name);
         }
-        console.log(data);
     });
     socket.on('login', (data) => {
        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
@@ -120,4 +120,28 @@ serverSocket.on('connection', (socket) => {
 
 serverHTTP.listen(port, () => {
     console.log(`Écoute en cours sur: ${address}:${port}`);
+});
+serverExpress.get('/', (request, response) => {
+    response.sendFile(resolve('../client/index.html'));
+});
+
+serverExpress.get('/login', (request, response) => {
+    response.sendFile(resolve('../client/login.html'));
+});
+
+serverExpress.get('/js/:fileName', (request, response) => {
+    response.sendFile(resolve('../client/js/' + request.params.fileName));
+});
+
+serverExpress.get('/css/:fileName', (request, response) => {
+    response.sendFile(resolve('../client/css/' + request.params.fileName));
+});
+
+serverExpress.post('/login', (requests) => {
+    let username = requests.body.username;
+    let password = requests.body.password;
+
+    if (username && password) {
+
+    }
 });
