@@ -48,12 +48,12 @@ function prettyTime() {
     return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds
 }
 
-function sendMessage(socket, message, time, author) {
+function sendMessage(socket, message, time, author, sendTo) {
     let data  = {
         content: message,
         time: time,
         author: author,
-        isMine: author === author
+        isMine: sendTo === author
     }
     console.log(data)
     socket.emit('message', data);
@@ -61,7 +61,7 @@ function sendMessage(socket, message, time, author) {
 
 async function broadcast(message, time, author) {
     for (let element of userLogged){
-        sendMessage(element.sock, message, time, author);
+        sendMessage(element.sock, message, time, author, element.userName);
     }
 }
 
@@ -69,6 +69,7 @@ async function broadcast(message, time, author) {
 const port = 3002;
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
+let id = 0;
 
 // Création des serveurs
 const serverExpress = express();
@@ -82,12 +83,13 @@ serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
     let logged = false;
     let token = null;
+    let userName = null;
     socket.on('message', (data) => {
         if (!logged) {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         } else {
-            broadcast(data.content, prettyTime(), token);
+            broadcast(data.content, prettyTime(), userName);
         }
         console.log(data);
     });
@@ -102,7 +104,10 @@ serverSocket.on('connection', (socket) => {
            else {
                logged = true;
                token = data.userToken;
+               userName = results[0];
+               id++;
                userLogged.push({
+                   id: id,
                    sock: socket,
                    token: data.userToken,
                    userName: results[0],
