@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
 import { resolve } from 'path';
+import { verify } from 'argon2'
 
 
 function queryDatabase(query, callback) {
@@ -142,6 +143,17 @@ serverExpress.post('/login', (requests) => {
     let password = requests.body.password;
 
     if (username && password) {
-
+        queryDatabase(`SELECT salt, password, token FROM user WHERE user_name=${username}`, (results) => {
+           let hashed_password = verify(results.salt, password);
+           if (hashed_password === results.password) {
+               socket.emit('login-s', {
+                   token: results.token,
+                   message: 'Bienvenue'
+               });
+           } else {
+               const nextUrl = `/login?error=loginError`;
+               return requests.redirect(nextUrl);
+           }
+        });
     }
 });
