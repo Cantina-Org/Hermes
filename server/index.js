@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
 import { resolve } from 'path';
-import { verify } from 'argon2'
+import { hash } from 'argon2'
 
 
 function queryDatabase(query, callback) {
@@ -79,6 +79,7 @@ const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
 // serverExpress.use(express.static("../client/"));
+serverExpress.use(express.urlencoded({ extended: true }));
 
 // Web Socket:
 serverSocket.on('connection', (socket) => {
@@ -138,22 +139,26 @@ serverExpress.get('/css/:fileName', (request, response) => {
     response.sendFile(resolve('../client/css/' + request.params.fileName));
 });
 
-serverExpress.post('/login', (requests) => {
-    let username = requests.body.nm;
-    let password = requests.body.passwd;
+serverExpress.post('/login', (req, res) => {
+    let username = req.body.nm;
+    let password = req.body.passwd;
 
     if (username && password) {
-        queryDatabase(`SELECT salt, password, token FROM user WHERE user_name=${username}`, (results) => {
-           let hashed_password = verify(results.salt, password);
-           if (hashed_password === results.password) {
-               socket.emit('login-s', {
-                   token: results.token,
-                   message: 'Bienvenue'
-               });
-           } else {
-               const nextUrl = `/login?error=loginError`;
-               return requests.redirect(nextUrl);
-           }
+        queryDatabase(`SELECT salt, password, token FROM user WHERE user_name='${username}'`, async (results) => {
+            console.log(results)
+            let salt = Buffer.from(results[0].salt, 'hex');
+            console.log(await hash(password, { salt } ));
+            let hashed_password = hash(password, results[0].salt);
+            if (hashed_password === results.password) {
+                console.log('Login successful')
+                socket.emit('login-s', {
+                    token: results.token,
+                    message: 'Bienvenue'
+                });
+            } else {
+                const nextUrl = `/login?error=loginError`;
+                return res.redirect(nextUrl);
+            }
         });
     }
 });
