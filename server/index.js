@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
 import { resolve } from 'path';
 import { hash } from 'argon2'
+import {existsSync, readFileSync, writeFileSync} from "fs";
 
 
 function queryDatabase(query, callback) {
@@ -67,11 +68,20 @@ async function broadcast(message, time, author) {
     }
 }
 
+function saveMessages() {
+    writeFileSync('./messages/general.json', JSON.stringify(messages));
+}
+
+if (!existsSync('./messages/general.json')){
+    writeFileSync('./messages/general.json', '[]');
+}
+
 // Constante pour les serveurs
 const port = 3002;
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
-const messages = [];
+const messages = JSON.parse(readFileSync('./messages/general.json'))
+let id = 0;
 
 // Création des serveurs
 const serverExpress = express();
@@ -94,6 +104,7 @@ serverSocket.on('connection', (socket) => {
         } else {
             messages.push({data: data.content, time: prettyTime(), author: userName.user_name})
             broadcast(data.content, prettyTime(), userName.user_name);
+            saveMessages();
         }
     });
     socket.on('login', (data) => {
