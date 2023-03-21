@@ -94,6 +94,9 @@ serverExpress.use(express.urlencoded({ extended: true }));
 // Web Socket:
 serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
+    messages.forEach((msg) => {
+        sendMessage(socket, msg.content, msg.time, msg.author);
+    })
     let logged = false;
     let token = null;
     let userName = null;
@@ -102,7 +105,7 @@ serverSocket.on('connection', (socket) => {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         } else {
-            messages.push({data: data.content, time: prettyTime(), author: userName.user_name})
+            messages.push({content: data.content, time: prettyTime(), author: userName.user_name})
             broadcast(data.content, prettyTime(), userName.user_name);
             saveMessages();
         }
