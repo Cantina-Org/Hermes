@@ -71,7 +71,7 @@ async function broadcast(message, time, author) {
 const port = 3002;
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
-let id = 0;
+const messages = [];
 
 // Création des serveurs
 const serverExpress = express();
@@ -92,6 +92,7 @@ serverSocket.on('connection', (socket) => {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         } else {
+            messages.push({data: data.content, time: prettyTime(), author: userName.user_name})
             broadcast(data.content, prettyTime(), userName.user_name);
         }
     });
