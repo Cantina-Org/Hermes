@@ -139,8 +139,8 @@ serverExpress.get('/css/:fileName', (request, response) => {
 });
 
 serverExpress.post('/login', (requests) => {
-    let username = requests.body.username;
-    let password = requests.body.password;
+    let username = requests.body.nm;
+    let password = requests.body.passwd;
 
     if (username && password) {
         queryDatabase(`SELECT salt, password, token FROM user WHERE user_name=${username}`, (results) => {
