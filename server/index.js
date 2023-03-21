@@ -4,6 +4,8 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
 import { resolve } from 'path';
+import { hash } from 'argon2'
+import {existsSync, readFileSync, writeFileSync} from "fs";
 
 
 function queryDatabase(query, callback) {
@@ -66,10 +68,19 @@ async function broadcast(message, time, author) {
     }
 }
 
+function saveMessages() {
+    writeFileSync('./messages/general.json', JSON.stringify(messages));
+}
+
+if (!existsSync('./messages/general.json')){
+    writeFileSync('./messages/general.json', '[]');
+}
+
 // Constante pour les serveurs
 const port = 3002;
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
+const messages = JSON.parse(readFileSync('./messages/general.json'))
 let id = 0;
 
 // Création des serveurs
@@ -78,10 +89,14 @@ const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
 // serverExpress.use(express.static("../client/"));
+serverExpress.use(express.urlencoded({ extended: true }));
 
 // Web Socket:
 serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
+    messages.forEach((msg) => {
+        sendMessage(socket, msg.content, msg.time, msg.author);
+    })
     let logged = false;
     let token = null;
     let userName = null;
@@ -90,7 +105,9 @@ serverSocket.on('connection', (socket) => {
             socket.emit('redirect', '/login');
             console.log('User not logged in');
         } else {
+            messages.push({content: data.content, time: prettyTime(), author: userName.user_name})
             broadcast(data.content, prettyTime(), userName.user_name);
+            saveMessages();
         }
     });
     socket.on('login', (data) => {
@@ -137,11 +154,26 @@ serverExpress.get('/css/:fileName', (request, response) => {
     response.sendFile(resolve('../client/css/' + request.params.fileName));
 });
 
-serverExpress.post('/login', (requests) => {
-    let username = requests.body.username;
-    let password = requests.body.password;
+serverExpress.post('/login', (req, res) => {
+    let username = req.body.nm;
+    let password = req.body.passwd;
 
     if (username && password) {
-
+        queryDatabase(`SELECT salt, password, token FROM user WHERE user_name='${username}'`, async (results) => {
+            console.log(results)
+            let salt = Buffer.from(results[0].salt, 'hex');
+            console.log(await hash(password, { salt } ));
+            let hashed_password = hash(password, results[0].salt);
+            if (hashed_password === results.password) {
+                console.log('Login successful')
+                socket.emit('login-s', {
+                    token: results.token,
+                    message: 'Bienvenue'
+                });
+            } else {
+                const nextUrl = `/login?error=loginError`;
+                return res.redirect(nextUrl);
+            }
+        });
     }
 });
