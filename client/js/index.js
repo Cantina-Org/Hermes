@@ -1,10 +1,19 @@
-document.cookie = 'token=f899c755-a1f2-35cc-81d2-02d90db2816f';
 let socket = io();
+
+function getCookie(name){
+    const pattern = RegExp(name + "=.[^;]*");
+    const matched = document.cookie.match(pattern);
+    if(matched){
+        const cookie = matched[0].split('=');
+        return cookie[1]
+    }
+    return false
+}
+
 socket.on('connect', function() {
-    socket.emit('login', {userToken: 'f899c755-a1f2-35cc-81d2-02d90db2816f'});
+    socket.emit('login', {userToken: getCookie('token')});
 });
 socket.on('message', (data) => {
-    console.log(data);
     addMessage(data.content, data.time + ' • ' + data.author, data.isMine);
 })
 socket.on('redirect', (destination) => {
