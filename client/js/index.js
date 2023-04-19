@@ -21,7 +21,7 @@ socket.on('redirect', (destination) => {
 });
 socket.on('error', (data) => {
    if (data.code === 404 && data.name === 'User Not Found'){
-       window.location.href = '/login.html';
+       window.location.href = '/login';
    }
 });
 

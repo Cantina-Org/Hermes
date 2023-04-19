@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
 import { resolve } from 'path';
-import { hash } from 'argon2'
+import { verify } from 'argon2'
 import {existsSync, readFileSync, writeFileSync} from "fs";
 
 
@@ -102,8 +102,11 @@ serverSocket.on('connection', (socket) => {
     let userName = null;
     socket.on('message', (data) => {
         if (!logged) {
-            socket.emit('redirect', '/login');
-            console.log('User not logged in');
+            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+                console.log(results)
+                socket.emit('redirect', '/login');
+                console.log('User not logged in');
+            });
         } else {
             messages.push({content: data.content, time: prettyTime(), author: userName.user_name})
             broadcast(data.content, prettyTime(), userName.user_name);
@@ -159,11 +162,11 @@ serverExpress.post('/login', (req, res) => {
     let password = req.body.passwd;
 
     if (username && password) {
-        queryDatabase(`SELECT salt, password, token FROM user WHERE user_name='${username}'`, async (results) => {
-            console.log(results)
-            let salt = Buffer.from(results[0].salt, 'hex');
-            console.log(await hash(password, { salt } ));
-            let hashed_password = hash(password, results[0].salt);
+        queryDatabase(`SELECT password, token FROM user WHERE user_name='${username}'`, async (results) => {
+            console.log(results[0])
+
+            console.log(await verify(results.password, password));
+            let hashed_password = verify(results.password, password);
             if (hashed_password === results.password) {
                 console.log('Login successful')
                 socket.emit('login-s', {
