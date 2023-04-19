@@ -4,7 +4,6 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from "mysql";
 import { resolve } from 'path';
-import { verify } from 'argon2'
 import {existsSync, readFileSync, writeFileSync} from "fs";
 
 
@@ -116,9 +115,13 @@ serverSocket.on('connection', (socket) => {
     socket.on('login', (data) => {
        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
            if (results.length === 0) {
-               socket.emit('error', data={
-                   name: "User Not Found",
-                   code: 404
+               queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+                   socket.emit('login-error', data={
+                       name: "User Not Found",
+                       code: 404,
+                       cerbere_fqdn: results[0].fqdn,
+                       hermes_fqdn: results[0]
+                   });
                });
            }
            else {
@@ -155,28 +158,4 @@ serverExpress.get('/js/:fileName', (request, response) => {
 
 serverExpress.get('/css/:fileName', (request, response) => {
     response.sendFile(resolve('../client/css/' + request.params.fileName));
-});
-
-serverExpress.post('/login', (req, res) => {
-    let username = req.body.nm;
-    let password = req.body.passwd;
-
-    if (username && password) {
-        queryDatabase(`SELECT password, token FROM user WHERE user_name='${username}'`, async (results) => {
-            console.log(results[0])
-
-            console.log(await verify(results.password, password));
-            let hashed_password = verify(results.password, password);
-            if (hashed_password === results.password) {
-                console.log('Login successful')
-                socket.emit('login-s', {
-                    token: results.token,
-                    message: 'Bienvenue'
-                });
-            } else {
-                const nextUrl = `/login?error=loginError`;
-                return res.redirect(nextUrl);
-            }
-        });
-    }
 });
