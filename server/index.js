@@ -2,9 +2,9 @@ import { networkInterfaces } from 'os';
 import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { createConnection} from "mysql";
+import { createConnection} from 'mysql';
 import { resolve } from 'path';
-import {existsSync, readFileSync, writeFileSync} from "fs";
+import {existsSync, readFileSync, writeFileSync} from 'fs';
 
 
 function queryDatabase(query, callback) {
@@ -19,7 +19,6 @@ function queryDatabase(query, callback) {
             console.error('Erreur de connexion à la base de données:', err);
             return;
         }
-        console.log('Connexion à la base de données réussie!');
         connection.query(query, (error, results) => {
             if (error) {
                 console.error('Erreur lors de l\'exécution de la requête:', error);
@@ -30,9 +29,7 @@ function queryDatabase(query, callback) {
             connection.end((err) => {
                 if (err) {
                     console.error('Erreur lors de la fermeture de la connexion à la base de données:', err);
-                    return;
                 }
-                console.log('Connexion à la base de données fermée!');
             });
         });
     });
@@ -119,8 +116,7 @@ serverSocket.on('connection', (socket) => {
                    socket.emit('login-error', data={
                        name: "User Not Found",
                        code: 404,
-                       cerbere_fqdn: results[0].fqdn,
-                       hermes_fqdn: results[0]
+                       cerbere_fqdn: results[0].fqdn
                    });
                });
            }
@@ -146,10 +142,6 @@ serverHTTP.listen(port, () => {
 });
 serverExpress.get('/', (request, response) => {
     response.sendFile(resolve('../client/index.html'));
-});
-
-serverExpress.get('/login', (request, response) => {
-    response.sendFile(resolve('../client/login.html'));
 });
 
 serverExpress.get('/js/:fileName', (request, response) => {
