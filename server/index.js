@@ -74,7 +74,7 @@ if (!existsSync('./messages/general.json')){
 
 // Constante pour les serveurs
 const port = 3002;
-const address = networkInterfaces()['wlo1'][0].address;
+const address = networkInterfaces()['lo'][0].address;
 const userLogged = [];
 const messages = JSON.parse(readFileSync('./messages/general.json'))
 let id = 0;
