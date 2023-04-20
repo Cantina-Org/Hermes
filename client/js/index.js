@@ -19,9 +19,10 @@ socket.on('message', (data) => {
 socket.on('redirect', (destination) => {
     window.location.href = destination;
 });
-socket.on('error', (data) => {
+socket.on('login-error', (data) => {
+    console.log(data);
    if (data.code === 404 && data.name === 'User Not Found'){
-       window.location.href = '/login.html';
+       window.location.href = `http://${data.cerbere_fqdn}/auth/hermes`;
    }
 });
 
