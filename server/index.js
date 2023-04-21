@@ -49,19 +49,21 @@ function prettyTime() {
     return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds
 }
 
-function sendMessage(socket, message, time, author, sendTo) {
+function sendMessage(socket, message, time, author, sendTo, token) {
     let data  = {
         content: message,
         time: time,
         author: author,
-        isMine: sendTo === author
+        isMine: sendTo === author,
+        token: token
     }
+    console.log(data)
     socket.emit('message', data);
 }
 
-async function broadcast(message, time, author) {
+async function broadcast(message, time, author, token) {
     for (let element of userLogged){
-        sendMessage(element.sock, message, time, author, element.userName);
+        sendMessage(element.sock, message, time, author, element.userName, token);
     }
 }
 
@@ -86,24 +88,24 @@ const serverExpress = express();
 const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
-// Pour faire des HTML avec des data
-nunjucks.configure('views', {
-    autoescape: true,
-    express: serverExpress
-});
-
 // serverExpress.use(express.static("../client/"));
 serverExpress.use(express.urlencoded({ extended: true }));
+serverExpress.set('view engine', 'html')
+
+// Pour faire des HTML avec des data
+nunjucks.configure('../client/', {
+    autoescape: true,
+    express: serverExpress,
+    watch: true
+});
 
 // Web Socket:
 serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
-    messages.forEach((msg) => {
-        sendMessage(socket, msg.content, msg.time, msg.author);
-    })
     let logged = false;
     let token = null;
     let userName = null;
+
     socket.on('message', (data) => {
         if (!logged) {
             queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
@@ -112,8 +114,9 @@ serverSocket.on('connection', (socket) => {
                 console.log('User not logged in');
             });
         } else {
-            messages.push({content: data.content, time: prettyTime(), author: userName.user_name})
-            broadcast(data.content, prettyTime(), userName.user_name);
+            console.log(token)
+            messages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
+            broadcast(data.content, prettyTime(), userName.user_name, token);
             savePublicMessages();
         }
     });
@@ -142,10 +145,17 @@ serverSocket.on('connection', (socket) => {
                    token: data.userToken,
                    userName: results[0],
                });
+               messages.forEach((msg) => {
+                   sendMessage(socket, msg.content, msg.time, msg.author, null, token);
+               })
            }
        });
         console.log(data)
     });
+});
+
+serverSocket.of('/private').on('connection', (socket) => {
+    console.log("AHAHAHAHHAHAAHAHAHAHAHAHAHAHAHA")
 });
 
 serverHTTP.listen(port, () => {
@@ -158,7 +168,7 @@ serverExpress.get('/', (request, response) => {
 serverExpress.get('/private/', (request, response) => {
     queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
         console.log(results)
-        response.sendFile(resolve('../client/list-private-message.html'), {results});
+        response.render('list-private-message.html', {results});
     });
 });
 
