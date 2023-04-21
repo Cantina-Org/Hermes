@@ -1,10 +1,11 @@
 import { networkInterfaces } from 'os';
-import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from 'mysql';
 import { resolve } from 'path';
 import {existsSync, readFileSync, writeFileSync} from 'fs';
+import express from 'express';
+import nunjucks from "nunjucks";
 
 
 function queryDatabase(query, callback) {
@@ -64,13 +65,14 @@ async function broadcast(message, time, author) {
     }
 }
 
-function saveMessages() {
+function savePublicMessages() {
     writeFileSync('./messages/general.json', JSON.stringify(messages));
 }
 
 if (!existsSync('./messages/general.json')){
     writeFileSync('./messages/general.json', '[]');
 }
+
 
 // Constante pour les serveurs
 const port = 3002;
@@ -83,6 +85,12 @@ let id = 0;
 const serverExpress = express();
 const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
+
+// Pour faire des HTML avec des data
+nunjucks.configure('views', {
+    autoescape: true,
+    express: serverExpress
+});
 
 // serverExpress.use(express.static("../client/"));
 serverExpress.use(express.urlencoded({ extended: true }));
@@ -106,8 +114,11 @@ serverSocket.on('connection', (socket) => {
         } else {
             messages.push({content: data.content, time: prettyTime(), author: userName.user_name})
             broadcast(data.content, prettyTime(), userName.user_name);
-            saveMessages();
+            savePublicMessages();
         }
+    });
+    socket.on('private-message', (data) => {
+       console.log(data);
     });
     socket.on('login', (data) => {
        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
@@ -142,6 +153,21 @@ serverHTTP.listen(port, () => {
 });
 serverExpress.get('/', (request, response) => {
     response.sendFile(resolve('../client/index.html'));
+});
+
+serverExpress.get('/private/', (request, response) => {
+    queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
+        console.log(results)
+        response.sendFile(resolve('../client/list-private-message.html'), {results});
+    });
+});
+
+serverExpress.get('/private/:token', (request, response) => {
+    if (!request.params.token){
+        response.redirect('/private');
+    } else {
+        response.sendFile(resolve('../client/private-message.html'));
+    }
 });
 
 serverExpress.get('/js/:fileName', (request, response) => {
