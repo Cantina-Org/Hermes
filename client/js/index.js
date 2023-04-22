@@ -11,7 +11,7 @@ function getCookie(name){
 }
 
 socket.on('connect', function() {
-    socket.emit('login', {userToken: getCookie('token')});
+    socket.emit('login', {userToken: getCookie('token'), privateMessage: false});
 });
 socket.on('message', (data) => {
     addMessage(data.content, data.time + ' • ' + data.author, data.isMine, data.token);

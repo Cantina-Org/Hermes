@@ -10,9 +10,9 @@ import nunjucks from "nunjucks";
 
 function queryDatabase(query, callback) {
     const connection = createConnection({
-        host: 'localhost',
+        host: '127.0.0.1',
         user: 'cantina',
-        password: 'LeMdPDeTest',
+        password: '!Asvel2021_._',
         database: 'cantina_administration'
     });
     connection.connect((err) => {
@@ -57,7 +57,6 @@ function sendMessage(socket, message, time, author, sendTo, token) {
         isMine: sendTo === author,
         token: token
     }
-    console.log(data)
     socket.emit('message', data);
 }
 
@@ -109,48 +108,53 @@ serverSocket.on('connection', (socket) => {
     socket.on('message', (data) => {
         if (!logged) {
             queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
-                console.log(results)
                 socket.emit('redirect', '/login');
                 console.log('User not logged in');
             });
         } else {
-            console.log(token)
             messages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
             broadcast(data.content, prettyTime(), userName.user_name, token);
             savePublicMessages();
         }
     });
+
     socket.on('private-message', (data) => {
        console.log(data);
     });
+    
     socket.on('login', (data) => {
-       queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
-           if (results.length === 0) {
-               queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
-                   socket.emit('login-error', data={
-                       name: "User Not Found",
-                       code: 404,
-                       cerbere_fqdn: results[0].fqdn
-                   });
-               });
-           }
-           else {
-               logged = true;
-               token = data.userToken;
-               userName = results[0];
-               id++;
-               userLogged.push({
-                   id: id,
-                   sock: socket,
-                   token: data.userToken,
-                   userName: results[0],
-               });
-               messages.forEach((msg) => {
-                   sendMessage(socket, msg.content, msg.time, msg.author, null, token);
-               })
+        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
+            if (results.length === 0) {
+                queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+                    socket.emit('login-error', data={
+                        name: "User Not Found",
+                        code: 404,
+                        cerbere_fqdn: results[0].fqdn
+                    });
+                });
+            }
+            else {
+                logged = true;
+                token = data.userToken;
+                userName = results[0];
+                id++;
+                userLogged.push({
+                    id: id,
+                    sock: socket,
+                    token: data.userToken,
+                    userName: results[0],
+                });
+                if (data.privateMessage){
+                    queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
+                        socket.emit('user-list', {userList: results})
+                    });
+                } else {
+                    messages.forEach((msg) => {
+                        sendMessage(socket, msg.content, msg.time, msg.author, null, token);
+                    });
+                }
            }
        });
-        console.log(data)
     });
 });
 
@@ -166,18 +170,7 @@ serverExpress.get('/', (request, response) => {
 });
 
 serverExpress.get('/private/', (request, response) => {
-    queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
-        console.log(results)
-        response.render('list-private-message.html', {results});
-    });
-});
-
-serverExpress.get('/private/:token', (request, response) => {
-    if (!request.params.token){
-        response.redirect('/private');
-    } else {
-        response.sendFile(resolve('../client/private-message.html'));
-    }
+    response.render('private-message.html');
 });
 
 serverExpress.get('/js/:fileName', (request, response) => {
