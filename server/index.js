@@ -12,7 +12,8 @@ function queryDatabase(query, callback) {
     const connection = createConnection({
         host: '127.0.0.1',
         user: 'cantina',
-        password: '!Asvel2021_._',
+        //password: '!Asvel2021_._',
+        password: 'LeMdPDeTest',
         database: 'cantina_administration'
     });
     connection.connect((err) => {
