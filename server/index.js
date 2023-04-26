@@ -156,6 +156,13 @@ serverSocket.on('connection', (socket) => {
 
     socket.on('private-message-get', (data) => {
        console.log(data);
+       if (existsSync(`./messages/private/${data.sender}|${data.token}.json`)){
+           const messages = JSON.parse(readFileSync(`./messages/private/${data.sender}|${data.token}.json`));
+       } else if (existsSync(`./messages/private/${data.token}|${data.sender}.json`)){
+           const messages = JSON.parse(readFileSync(`./messages/private/${data.token}|${data.sender}.json`));
+       } else {
+           writeFileSync(`./messages/private/${data.sender}|${data.token}.json`, '[]');
+       }
     });
 });
 
