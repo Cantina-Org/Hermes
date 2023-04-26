@@ -106,23 +106,6 @@ serverSocket.on('connection', (socket) => {
     let token = null;
     let userName = null;
 
-    socket.on('message', (data) => {
-        if (!logged) {
-            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, () => {
-                socket.emit('redirect', '/login');
-                console.log('User not logged in');
-            });
-        } else {
-            messages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
-            broadcast(data.content, prettyTime(), userName.user_name, token);
-            savePublicMessages();
-        }
-    });
-
-    socket.on('private-message', (data) => {
-       console.log(data);
-    });
-    
     socket.on('login', (data) => {
         queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
             if (results.length === 0) {
@@ -154,13 +137,26 @@ serverSocket.on('connection', (socket) => {
                         sendMessage(socket, msg.content, msg.time, msg.author, null, token);
                     });
                 }
-           }
-       });
+            }
+        });
     });
-});
 
-serverSocket.of('/private').on('connection', (socket) => {
-    console.log("AHAHAHAHHAHAAHAHAHAHAHAHAHAHAHA")
+    socket.on('message', (data) => {
+        if (!logged) {
+            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, () => {
+                socket.emit('redirect', '/login');
+                console.log('User not logged in');
+            });
+        } else {
+            messages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
+            broadcast(data.content, prettyTime(), userName.user_name, token);
+            savePublicMessages();
+        }
+    });
+
+    socket.on('private-message', (data) => {
+       console.log(data);
+    });
 });
 
 serverHTTP.listen(port, () => {
