@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from 'mysql';
 import { resolve } from 'path';
-import {existsSync, readFileSync, writeFileSync} from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
 import nunjucks from "nunjucks";
 
@@ -108,7 +108,7 @@ serverSocket.on('connection', (socket) => {
 
     socket.on('message', (data) => {
         if (!logged) {
-            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, () => {
                 socket.emit('redirect', '/login');
                 console.log('User not logged in');
             });
