@@ -1,4 +1,5 @@
 let socket = io();
+let selection = null;
 
 function getCookie(name){
    const pattern = RegExp(name + "=.[^;]*");
@@ -13,7 +14,6 @@ function getCookie(name){
 function addUserToList(
     id,
     name = 'NO NAME',
-    color = '#000',
     onClick
 ) {
    const userList = document.querySelector('.user-list');
@@ -21,11 +21,6 @@ function addUserToList(
    const cellRow = document.createElement('li');
    cellRow.setAttribute('id', id);
    cellRow.setAttribute('class', 'cell-row');
-
-   const cellImage = document.createElement('div');
-   cellImage.setAttribute('class', 'cell-image');
-   cellImage.setAttribute('style', `background-color: ${color}`);
-   cellRow.appendChild(cellImage);
 
    const cellRowText = document.createElement('div');
    cellRowText.setAttribute('class', 'cell-row-text');
@@ -45,18 +40,18 @@ function addUserToList(
    });
 }
 
-
 socket.on('connect', () => {
    socket.emit('login', {userToken: getCookie('token'), privateMessage: true});
 });
 
 socket.on('user-list', (data) => {
-   console.log(typeof data);
-   console.log(data)
+   const userList = document.querySelector('.user-list');
+   userList.innerHTML = '';
    for (const i of data.userList){
-      console.log('userToken: ' + i.token);
-      console.log('userName: ' + i.user_name);
       if (i.token === getCookie('token')) continue
-      addUserToList(i.token, i.user_name, '#da04f1', () => {console.log(i.token)});
+      addUserToList(i.token, i.user_name, () => {
+         socket.emit('private-message-get', {sender: getCookie('token'), token: i.token});
+         selection = i.token;
+      });
    }
 });

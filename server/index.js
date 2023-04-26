@@ -154,7 +154,7 @@ serverSocket.on('connection', (socket) => {
         }
     });
 
-    socket.on('private-message', (data) => {
+    socket.on('private-message-get', (data) => {
        console.log(data);
     });
 });
