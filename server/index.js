@@ -60,6 +60,18 @@ function sendMessage(socket, message, time, author, sendTo, token) {
     socket.emit('message', data);
 }
 
+async function sendPrivateMessage(receiverToken, message, time, author, sendTo, senderToken) {
+    let data = {
+        content: message,
+        time: time,
+        author: author,
+
+    }
+    let receiver = userLogged.find(({token}) => token === receiverToken)
+    console.log(receiver)
+}
+
+
 async function broadcast(message, time, author, token) {
     for (let element of userLogged){
         sendMessage(element.sock, message, time, author, element.userName, token);
@@ -146,7 +158,6 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('private-messages-get', (data) => {
-        console.log(data);
         let privateMessages;
         let file1 = existsSync(`./messages/private-messages/${data.sender}|${data.token}.json`);
         let file2 = existsSync(`./messages/private-messages/${data.token}|${data.sender}.json`);
@@ -158,7 +169,10 @@ serverSocket.on('connection', (socket) => {
            writeFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`, '[]');
            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
         }
-        console.log(privateMessages)
+        privateMessages.forEach((msg) => {
+            sendPrivateMessage(socket, msg.content, msg.time, msg.author, null, token);
+            console.log(msg)
+        });
     });
 });
 
