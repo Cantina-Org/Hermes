@@ -50,7 +50,7 @@ socket.on('user-list', (data) => {
    for (const i of data.userList){
       if (i.token === getCookie('token')) continue
       addUserToList(i.token, i.user_name, () => {
-         socket.emit('private-message-get', {sender: getCookie('token'), token: i.token});
+         socket.emit('private-messages-get', {sender: getCookie('token'), token: i.token});
          selection = i.token;
       });
    }

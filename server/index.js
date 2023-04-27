@@ -5,7 +5,6 @@ import { createConnection} from 'mysql';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
-import nunjucks from "nunjucks";
 
 
 function queryDatabase(query, callback) {
@@ -68,7 +67,7 @@ async function broadcast(message, time, author, token) {
 }
 
 function savePublicMessages() {
-    writeFileSync('./messages/general.json', JSON.stringify(messages));
+    writeFileSync('./messages/general.json', JSON.stringify(globalMessages));
 }
 
 if (!existsSync('./messages/general.json')){
@@ -80,7 +79,7 @@ if (!existsSync('./messages/general.json')){
 const port = 3002;
 const address = networkInterfaces()['lo'][0].address;
 const userLogged = [];
-const messages = JSON.parse(readFileSync('./messages/general.json'))
+const globalMessages = JSON.parse(readFileSync('./messages/general.json'))
 let id = 0;
 
 // Création des serveurs
@@ -90,14 +89,6 @@ const serverSocket = new SocketIOServer(serverHTTP);
 
 // serverExpress.use(express.static("../client/"));
 serverExpress.use(express.urlencoded({ extended: true }));
-serverExpress.set('view engine', 'html')
-
-// Pour faire des HTML avec des data
-nunjucks.configure('../client/', {
-    autoescape: true,
-    express: serverExpress,
-    watch: true
-});
 
 // Web Socket:
 serverSocket.on('connection', (socket) => {
@@ -133,7 +124,7 @@ serverSocket.on('connection', (socket) => {
                         socket.emit('user-list', {userList: results})
                     });
                 } else {
-                    messages.forEach((msg) => {
+                    globalMessages.forEach((msg) => {
                         sendMessage(socket, msg.content, msg.time, msg.author, null, token);
                     });
                 }
@@ -148,21 +139,26 @@ serverSocket.on('connection', (socket) => {
                 console.log('User not logged in');
             });
         } else {
-            messages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
+            globalMessages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
             broadcast(data.content, prettyTime(), userName.user_name, token);
             savePublicMessages();
         }
     });
 
-    socket.on('private-message-get', (data) => {
-       console.log(data);
-       if (existsSync(`./messages/private/${data.sender}|${data.token}.json`)){
-           const messages = JSON.parse(readFileSync(`./messages/private/${data.sender}|${data.token}.json`));
-       } else if (existsSync(`./messages/private/${data.token}|${data.sender}.json`)){
-           const messages = JSON.parse(readFileSync(`./messages/private/${data.token}|${data.sender}.json`));
-       } else {
-           writeFileSync(`./messages/private/${data.sender}|${data.token}.json`, '[]');
-       }
+    socket.on('private-messages-get', (data) => {
+        console.log(data);
+        let privateMessages;
+        let file1 = existsSync(`./messages/private-messages/${data.sender}|${data.token}.json`);
+        let file2 = existsSync(`./messages/private-messages/${data.token}|${data.sender}.json`);
+        if (file1){
+            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
+        } else if (file2){
+            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.token}|${data.sender}.json`));
+        } else {
+           writeFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`, '[]');
+           privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
+        }
+        console.log(privateMessages)
     });
 });
 
@@ -174,7 +170,7 @@ serverExpress.get('/', (request, response) => {
 });
 
 serverExpress.get('/private/', (request, response) => {
-    response.render('private-message.html');
+    response.sendFile(resolve('../client/private-message.html'));
 });
 
 serverExpress.get('/js/:fileName', (request, response) => {
