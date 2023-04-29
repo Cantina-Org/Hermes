@@ -80,5 +80,6 @@ socket.on('user-list', (data) => {
 });
 
 socket.on('private-messages-send', (data) => {
+   console.log(data)
    addMessage(data.content, data.time + ' • ' + data.author, data.isMine, data.token);
 });

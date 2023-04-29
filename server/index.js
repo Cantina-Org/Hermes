@@ -60,15 +60,15 @@ function sendMessage(socket, message, time, author, sendTo, token) {
     socket.emit('message', data);
 }
 
-async function sendPrivateMessage(receiverToken, message, time, author, sendTo, senderToken) {
+async function sendPrivateMessage(receiverToken, message, time, author, senderToken) {
     let data = {
         content: message,
         time: time,
         author: author,
-
+        token: senderToken
     }
-    let receiver = userLogged.find( fruit => fruit.token === receiverToken);
-    console.log(receiver)
+    let receiver = userLogged.find( user => user.token === receiverToken);
+    receiver.sock.send('private-messages-send', data);
 }
 
 
@@ -193,4 +193,8 @@ serverExpress.get('/js/:fileName', (request, response) => {
 
 serverExpress.get('/css/:fileName', (request, response) => {
     response.sendFile(resolve('../client/css/' + request.params.fileName));
+});
+
+serverExpress.get('/favicon.ico', (request, response) => {
+    response.sendFile(resolve('../client/favicon.ico'));
 });
