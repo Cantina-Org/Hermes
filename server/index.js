@@ -67,7 +67,7 @@ async function sendPrivateMessage(receiverToken, message, time, author, sendTo, 
         author: author,
 
     }
-    let receiver = userLogged.find(({token}) => token === receiverToken)
+    let receiver = userLogged.find( fruit => fruit.token === receiverToken);
     console.log(receiver)
 }
 
@@ -170,7 +170,7 @@ serverSocket.on('connection', (socket) => {
            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
         }
         privateMessages.forEach((msg) => {
-            sendPrivateMessage(socket, msg.content, msg.time, msg.author, null, token);
+            sendPrivateMessage(data.sender, msg.content, msg.time, msg.author, null, msg.token);
             console.log(msg)
         });
     });
