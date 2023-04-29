@@ -61,13 +61,24 @@ function sendMessage(socket, message, time, author, sendTo, token) {
 }
 
 async function sendPrivateMessage(receiverToken, message, time, author, senderToken) {
+    let receiver;
     let data = {
         content: message,
         time: time,
         author: author,
         token: senderToken
     }
-    let receiver = userLogged.find( user => user.token === receiverToken);
+    let userToSend = false
+    while (!userToSend) {
+        for (let users of userLogged) {
+            if (users.sock.connected && users.token === receiverToken) {
+                receiver = users;
+                userToSend = true;
+                break;
+            }
+        }
+    }
+    console.log(receiver.sock.connected)
     receiver.sock.send('private-messages-send', data);
 }
 
