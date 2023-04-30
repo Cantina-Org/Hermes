@@ -169,7 +169,14 @@ serverSocket.on('connection', (socket) => {
            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
         }
         privateMessages.forEach((msg) => {
-            sendPrivateMessage(data.sender, msg.content, msg.time, msg.author, null, msg.token);
+            let receiver;
+            for (let users of userLogged) {
+                if (users.sock.connected && users.token === data.sender) {
+                    receiver = users;
+                    break;
+                }
+            }
+            sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token);
             console.log(msg)
         });
     });
@@ -199,9 +206,9 @@ serverExpress.get('/favicon.ico', (request, response) => {
 });
 
 setInterval(() => {
-    for (element of userLogged) {
-       if (!element.sock.connected) {
-
-       }
+    for (let i = 0; userLogged.length-1>i; i++) {
+        if (!userLogged[i].sock.connected) {
+            userLogged.splice(i, 1);
+        }
     }
 }, 60000);
