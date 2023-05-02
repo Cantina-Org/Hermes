@@ -1,16 +1,17 @@
 import { networkInterfaces } from 'os';
-import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createConnection} from 'mysql';
 import { resolve } from 'path';
-import {existsSync, readFileSync, writeFileSync} from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import express from 'express';
 
 
 function queryDatabase(query, callback) {
     const connection = createConnection({
-        host: 'localhost',
+        host: '127.0.0.1',
         user: 'cantina',
+        //password: '!Asvel2021_._',
         password: 'LeMdPDeTest',
         database: 'cantina_administration'
     });
@@ -48,35 +49,48 @@ function prettyTime() {
     return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds
 }
 
-function sendMessage(socket, message, time, author, sendTo) {
+function sendMessage(socket, message, time, author, sendTo, token) {
     let data  = {
         content: message,
         time: time,
         author: author,
-        isMine: sendTo === author
+        isMine: sendTo === author,
+        token: token
     }
     socket.emit('message', data);
 }
 
-async function broadcast(message, time, author) {
+async function sendPrivateMessage(receiver, message, time, author, senderToken) {
+    let data = {
+        content: message,
+        time: time,
+        author: author,
+        token: senderToken
+    }
+    receiver.send('private-messages-send', data);
+}
+
+
+async function broadcast(message, time, author, token) {
     for (let element of userLogged){
-        sendMessage(element.sock, message, time, author, element.userName);
+        sendMessage(element.sock, message, time, author, element.userName, token);
     }
 }
 
-function saveMessages() {
-    writeFileSync('./messages/general.json', JSON.stringify(messages));
+function savePublicMessages() {
+    writeFileSync('./messages/general.json', JSON.stringify(globalMessages));
 }
 
 if (!existsSync('./messages/general.json')){
     writeFileSync('./messages/general.json', '[]');
 }
 
+
 // Constante pour les serveurs
 const port = 3002;
 const address = networkInterfaces()['lo'][0].address;
 const userLogged = [];
-const messages = JSON.parse(readFileSync('./messages/general.json'))
+const globalMessages = JSON.parse(readFileSync('./messages/general.json'))
 let id = 0;
 
 // Création des serveurs
@@ -90,50 +104,81 @@ serverExpress.use(express.urlencoded({ extended: true }));
 // Web Socket:
 serverSocket.on('connection', (socket) => {
     console.log("Nouvelle connexion: " + socket.conn.remoteAddress);
-    messages.forEach((msg) => {
-        sendMessage(socket, msg.content, msg.time, msg.author);
-    })
     let logged = false;
     let token = null;
     let userName = null;
+
+    socket.on('login', (data) => {
+        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
+            if (results.length === 0) {
+                queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+                    socket.emit('login-error', data={
+                        name: "User Not Found",
+                        code: 404,
+                        cerbere_fqdn: results[0].fqdn
+                    });
+                });
+            }
+            else {
+                logged = true;
+                token = data.userToken;
+                userName = results[0];
+                id++;
+                userLogged.push({
+                    id: id,
+                    sock: socket,
+                    token: data.userToken,
+                    userName: results[0],
+                });
+                if (data.privateMessage){
+                    queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
+                        socket.emit('user-list', {userList: results})
+                    });
+                } else {
+                    globalMessages.forEach((msg) => {
+                        sendMessage(socket, msg.content, msg.time, msg.author, null, token);
+                    });
+                }
+            }
+        });
+    });
+
     socket.on('message', (data) => {
         if (!logged) {
-            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
-                console.log(results)
+            queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, () => {
                 socket.emit('redirect', '/login');
                 console.log('User not logged in');
             });
         } else {
-            messages.push({content: data.content, time: prettyTime(), author: userName.user_name})
-            broadcast(data.content, prettyTime(), userName.user_name);
-            saveMessages();
+            globalMessages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
+            broadcast(data.content, prettyTime(), userName.user_name, token);
+            savePublicMessages();
         }
     });
-    socket.on('login', (data) => {
-       queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.userToken}'`, (results) => {
-           if (results.length === 0) {
-               queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
-                   socket.emit('login-error', data={
-                       name: "User Not Found",
-                       code: 404,
-                       cerbere_fqdn: results[0].fqdn
-                   });
-               });
-           }
-           else {
-               logged = true;
-               token = data.userToken;
-               userName = results[0];
-               id++;
-               userLogged.push({
-                   id: id,
-                   sock: socket,
-                   token: data.userToken,
-                   userName: results[0],
-               });
-           }
-       });
-        console.log(data)
+
+    socket.on('private-messages-get', (data) => {
+        let privateMessages;
+        let file1 = existsSync(`./messages/private-messages/${data.sender}|${data.token}.json`);
+        let file2 = existsSync(`./messages/private-messages/${data.token}|${data.sender}.json`);
+        if (file1){
+            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
+        } else if (file2){
+            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.token}|${data.sender}.json`));
+        } else {
+           writeFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`, '[]');
+           privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
+        }
+        privateMessages.forEach((msg) => {
+            let receiver;
+            for (let users of userLogged) {
+                if (users.sock.connected && users.token === data.sender) {
+                    receiver = users;
+                    break;
+                }
+            }
+            sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token);
+            console.log(msg)
+        });
     });
 });
 
@@ -144,6 +189,10 @@ serverExpress.get('/', (request, response) => {
     response.sendFile(resolve('../client/index.html'));
 });
 
+serverExpress.get('/private/', (request, response) => {
+    response.sendFile(resolve('../client/private-message.html'));
+});
+
 serverExpress.get('/js/:fileName', (request, response) => {
     response.sendFile(resolve('../client/js/' + request.params.fileName));
 });
@@ -151,3 +200,15 @@ serverExpress.get('/js/:fileName', (request, response) => {
 serverExpress.get('/css/:fileName', (request, response) => {
     response.sendFile(resolve('../client/css/' + request.params.fileName));
 });
+
+serverExpress.get('/favicon.ico', (request, response) => {
+    response.sendFile(resolve('../client/favicon.ico'));
+});
+
+setInterval(() => {
+    for (let i = 0; userLogged.length-1>i; i++) {
+        if (!userLogged[i].sock.connected) {
+            userLogged.splice(i, 1);
+        }
+    }
+}, 60000);

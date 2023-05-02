@@ -11,10 +11,10 @@ function getCookie(name){
 }
 
 socket.on('connect', function() {
-    socket.emit('login', {userToken: getCookie('token')});
+    socket.emit('login', {userToken: getCookie('token'), privateMessage: false});
 });
 socket.on('message', (data) => {
-    addMessage(data.content, data.time + ' • ' + data.author, data.isMine);
+    addMessage(data.content, data.time + ' • ' + data.author, data.isMine, data.token);
 })
 socket.on('redirect', (destination) => {
     window.location.href = destination;
@@ -41,15 +41,17 @@ addEventListener('submit', (event) => {
 });
 
 
-function addMessage(content, time, isMine){
+function addMessage(content, time, isMine, token){
     const messageFeed = document.getElementById('message-feed');
     const messageElement = document.createElement('p');
 
     messageElement.setAttribute('class', isMine ? 'message message-me' : 'message');
 
-    const messageTime = document.createElement('p');
+    const messageTime = document.createElement('a');
     messageTime.setAttribute('class', 'message-time');
     messageTime.innerText = time;
+    console.log(token)
+    messageTime.href = '/private/'+token
 
     const messageContent = document.createElement('p');
     messageContent.setAttribute('class', 'message-content');
