@@ -3,30 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>Cantina - Hermes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf-8" src="../js/private-message.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/js/private-message.js"></script>
+    <style>
+        #message-form{
+            position: absolute;
+            bottom: 0;
+        }
+    </style>
 </head>
 <body>
     <h1><a href="/">Cantina</a></h1>
-    <div>
-        <ul class="user-list">
+    <div class="columns">
+        <div class="column is-1">
+            <ul class="user-list">
 
-        </ul>
-    </div>
-    <div id="message-feed">
-    </div>
-    <form id="message-form" class="input-wrapper" autocomplete="off">
-        <div class="input-bar">
-            <label for="message-input">Message: </label><input
-                id="message-input"
-                type="text"
-                placeholder="Write something..."
-                required
-        />
-            <button type="submit" class="input-button">
-                <img src="#" alt="Le bouton d'envoie du message" id="message-send" style="--primary-color: #444444; --secondary-color: #2e2b2b;" />
-            </button>
+            </ul>
         </div>
-    </form>
+        <div class="column">
+            <div id="message-feed">
+            </div>
+            <div class="notification">
+                <form id="message-form" class="input-wrapper" autocomplete="off">
+                    <div class="input-bar">
+                        <label for="message-input">Message: </label><input
+                            id="message-input"
+                            type="text"
+                            placeholder="Write something..."
+                            required
+                    />
+                        <button type="submit" class="input-button">
+                            <img src="#" alt="Le bouton d'envoie du message" id="message-send" style="--primary-color: #444444; --secondary-color: #2e2b2b;" />
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

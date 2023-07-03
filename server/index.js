@@ -177,9 +177,9 @@ serverSocket.on('connection', (socket) => {
                 }
             }
             sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token);
-            console.log(msg)
         });
     });
+
 });
 
 serverHTTP.listen(port, () => {
