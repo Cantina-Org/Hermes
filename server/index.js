@@ -176,7 +176,7 @@ serverSocket.on('connection', (socket) => {
                     break;
                 }
             }
-            sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token);
+            // sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token).then(r => );
         });
     });
 
