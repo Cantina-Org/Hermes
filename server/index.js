@@ -1,40 +1,11 @@
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { createConnection} from 'mysql';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
+import { queryDatabase } from './Utils/database.js'
 
-
-function queryDatabase(query, callback) {
-    const connection = createConnection({
-        host: '127.0.0.1',
-        user: 'cantina',
-        //password: '!Asvel2021_._',
-        password: 'LeMdPDeTest',
-        database: 'cantina_administration'
-    });
-    connection.connect((err) => {
-        if (err) {
-            console.error('Erreur de connexion à la base de données:', err);
-            return;
-        }
-        connection.query(query, (error, results) => {
-            if (error) {
-                console.error('Erreur lors de l\'exécution de la requête:', error);
-                return;
-            }
-            let finalResults = JSON.parse(JSON.stringify(results))
-            callback(finalResults);
-            connection.end((err) => {
-                if (err) {
-                    console.error('Erreur lors de la fermeture de la connexion à la base de données:', err);
-                }
-            });
-        });
-    });
-}
 
 function prettyTime() {
     const time = new Date();
