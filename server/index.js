@@ -1,40 +1,11 @@
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { createConnection} from 'mysql';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
+import { queryDatabase } from './Utils/database.js'
 
-
-function queryDatabase(query, callback) {
-    const connection = createConnection({
-        host: '127.0.0.1',
-        user: 'cantina',
-        //password: '!Asvel2021_._',
-        password: 'LeMdPDeTest',
-        database: 'cantina_administration'
-    });
-    connection.connect((err) => {
-        if (err) {
-            console.error('Erreur de connexion à la base de données:', err);
-            return;
-        }
-        connection.query(query, (error, results) => {
-            if (error) {
-                console.error('Erreur lors de l\'exécution de la requête:', error);
-                return;
-            }
-            let finalResults = JSON.parse(JSON.stringify(results))
-            callback(finalResults);
-            connection.end((err) => {
-                if (err) {
-                    console.error('Erreur lors de la fermeture de la connexion à la base de données:', err);
-                }
-            });
-        });
-    });
-}
 
 function prettyTime() {
     const time = new Date();
@@ -88,7 +59,7 @@ if (!existsSync('./messages/general.json')){
 
 // Constante pour les serveurs
 const port = 3002;
-const address = networkInterfaces()['lo'][0].address;
+const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'))
 let id = 0;
@@ -176,7 +147,7 @@ serverSocket.on('connection', (socket) => {
                     break;
                 }
             }
-            sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token);
+            // sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token).then(r => );
         });
     });
 
