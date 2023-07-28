@@ -69,7 +69,6 @@ const serverExpress = express();
 const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
-// serverExpress.use(express.static("../client/"));
 serverExpress.use(express.urlencoded({ extended: true }));
 
 // Web Socket:
@@ -84,8 +83,8 @@ serverSocket.on('connection', (socket) => {
             if (results.length === 0) {
                 queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
                     socket.emit('login-error', data={
-                        name: "User Not Found",
-                        code: 404,
+                        name: "Unauthorized: User Not Logged",
+                        code: 401,
                         cerbere_fqdn: results[0].fqdn
                     });
                 });
@@ -151,6 +150,9 @@ serverSocket.on('connection', (socket) => {
         });
     });
 
+    socket.on('message-private', (data) => {
+        if(data.receiver){}
+    });
 });
 
 serverHTTP.listen(port, () => {
@@ -160,7 +162,7 @@ serverExpress.get('/', (request, response) => {
     response.sendFile(resolve('../client/index.html'));
 });
 
-serverExpress.get('/private/', (request, response) => {
+serverExpress.get('/private/:userid'                                       , (request, response) => {
     response.sendFile(resolve('../client/private-message.html'));
 });
 

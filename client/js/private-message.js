@@ -75,11 +75,29 @@ socket.on('user-list', (data) => {
       addUserToList(i.token, i.user_name, () => {
          socket.emit('private-messages-get', {sender: getCookie('token'), token: i.token});
          selection = i.token;
+         console.log(selection)
       });
    }
 });
 
-socket.on('private-messages-send', (data) => {
+socket.on('message-private-receive', (data) => {
    console.log(data)
    addMessage(data.content, data.time + ' • ' + data.author, data.isMine, data.token);
+});
+
+
+addEventListener('submit', (event) => {
+   event.preventDefault();
+   const messageInput = document.getElementById('message-input')
+
+
+   const data = {
+      content: messageInput.value,
+      author: getCookie('token'),
+      receiver: selection
+   }
+   if (messageInput !== '') {
+      socket.emit('message-private', data);
+      messageInput.value = '';
+   }
 });
