@@ -31,16 +31,6 @@ function sendMessage(socket, message, time, author, sendTo, token) {
     socket.emit('message', data);
 }
 
-async function sendPrivateMessage(receiver, message, time, author, senderToken) {
-    let data = {
-        content: message,
-        time: time,
-        author: author,
-        token: senderToken
-    }
-    receiver.send('private-messages-send', data);
-}
-
 
 async function broadcast(message, time, author, token) {
     for (let element of userLogged){
@@ -146,12 +136,17 @@ serverSocket.on('connection', (socket) => {
                     break;
                 }
             }
-            // sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token).then(r => );
         });
     });
 
     socket.on('message-private', (data) => {
-        if(data.receiver){}
+        console.log(data)
+        for(let user of userLogged) {
+            console.log(user)
+            if (user.token === data.receiver || user.token === data.author) {
+                user.socket.emit('message-private-receive', data)
+            }
+        }
     });
 });
 
