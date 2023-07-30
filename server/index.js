@@ -4,7 +4,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
-import { queryDatabase } from './Utils/database.js'
+import { queryDatabase } from './Utils/database.js';
 
 
 function prettyTime() {
@@ -17,7 +17,7 @@ function prettyTime() {
     const month = time.getMonth().toString().padStart(2, '0');
     const year = time.getFullYear().toString().padStart(2, '0');
 
-    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds
+    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds;
 }
 
 function sendMessage(socket, message, time, author, sendTo, token) {
@@ -27,7 +27,7 @@ function sendMessage(socket, message, time, author, sendTo, token) {
         author: author,
         isMine: sendTo === author,
         token: token
-    }
+    };
     socket.emit('message', data);
 }
 
@@ -51,7 +51,7 @@ if (!existsSync('./messages/general.json')){
 const port = 3002;
 const address = networkInterfaces()['lo'][0].address;
 const userLogged = [];
-const globalMessages = JSON.parse(readFileSync('./messages/general.json'))
+const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
 let id = 0;
 
 // Création des serveurs
@@ -92,7 +92,7 @@ serverSocket.on('connection', (socket) => {
                 });
                 if (data.privateMessage){
                     queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
-                        socket.emit('user-list', {userList: results})
+                        socket.emit('user-list', {userList: results});
                     });
                 } else {
                     globalMessages.forEach((msg) => {
@@ -110,7 +110,7 @@ serverSocket.on('connection', (socket) => {
                 console.log('User not logged in');
             });
         } else {
-            globalMessages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
+            globalMessages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token});
             broadcast(data.content, prettyTime(), userName.user_name, token);
             savePublicMessages();
         }
@@ -158,7 +158,7 @@ serverExpress.get('/', (request, response) => {
     response.sendFile(resolve('../client/index.html'));
 });
 
-serverExpress.get('/private/:userid'                                       , (request, response) => {
+serverExpress.get('/private/:userid', (request, response) => {
     response.sendFile(resolve('../client/private-message.html'));
 });
 

@@ -10,7 +10,7 @@ function addMessage(content, time, isMine, token){
    const messageTime = document.createElement('a');
    messageTime.setAttribute('class', 'message-time');
    messageTime.innerText = time;
-   messageTime.href = '/private/'+token
+   messageTime.href = '/private/'+token;
 
    const messageContent = document.createElement('p');
    messageContent.setAttribute('class', 'message-content');
@@ -28,9 +28,9 @@ function getCookie(name){
    const matched = document.cookie.match(pattern);
    if(matched){
        const cookie = matched[0].split('=');
-       return cookie[1]
+       return cookie[1];
    }
-   return false
+   return false;
 }
 
 function addUserToList(
@@ -70,7 +70,7 @@ socket.on('user-list', (data) => {
    const userList = document.querySelector('.user-list');
    userList.innerHTML = '';
    for (const i of data.userList){
-      if (i.token === getCookie('token')) continue
+      if (i.token === getCookie('token')) continue;
       addUserToList(i.token, i.user_name, () => {
          socket.emit('private-messages-get', {sender: getCookie('token'), token: i.token});
          selection = i.token;
@@ -87,14 +87,14 @@ socket.on('message-private-receive', (data) => {
 
 addEventListener('submit', (event) => {
    event.preventDefault();
-   const messageInput = document.getElementById('message-input')
+   const messageInput = document.getElementById('message-input');
 
 
    const data = {
       content: messageInput.value,
       author: getCookie('token'),
       receiver: selection
-   }
+   };
    if (messageInput !== '') {
       socket.emit('message-private', data);
       messageInput.value = '';
