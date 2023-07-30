@@ -140,11 +140,9 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('message-private', (data) => {
-        console.log(data)
         for(let user of userLogged) {
-            console.log(user)
             if (user.token === data.receiver || user.token === data.author) {
-                user.socket.emit('message-private-receive', data)
+                user.sock.emit('message-private-receive', data)
             }
         }
     });
