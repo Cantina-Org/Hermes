@@ -10,7 +10,6 @@ function addMessage(content, time, isMine, token){
    const messageTime = document.createElement('a');
    messageTime.setAttribute('class', 'message-time');
    messageTime.innerText = time;
-   console.log(token)
    messageTime.href = '/private/'+token
 
    const messageContent = document.createElement('p');
@@ -82,7 +81,7 @@ socket.on('user-list', (data) => {
 
 socket.on('message-private-receive', (data) => {
    console.log(data)
-   addMessage(data.content, data.time + ' • ' + data.author, data.isMine, data.token);
+   addMessage(data.content, data.time + ' • ' + data.author_name, data.author === getCookie('token'), data.author);
 });
 
 

@@ -140,11 +140,16 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('message-private', (data) => {
-        for(let user of userLogged) {
-            if (user.token === data.receiver || user.token === data.author) {
-                user.sock.emit('message-private-receive', data)
+        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.author}'`, (results) => {
+            console.log(results)
+            data.author_name =  results[0].user_name;
+            console.log(data)
+            for(let user of userLogged) {
+                if (user.token === data.receiver || user.token === data.author) {
+                    user.sock.emit('message-private-receive', data);
+                }
             }
-        }
+        });
     });
 });
 
