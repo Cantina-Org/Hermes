@@ -49,7 +49,7 @@ if (!existsSync('./messages/general.json')){
 
 // Constante pour les serveurs
 const port = 3002;
-const address = networkInterfaces()['wlo1'][0].address;
+const address = networkInterfaces()['lo'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'))
 let id = 0;
@@ -141,9 +141,7 @@ serverSocket.on('connection', (socket) => {
 
     socket.on('message-private', (data) => {
         queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.author}'`, (results) => {
-            console.log(results)
             data.author_name =  results[0].user_name;
-            console.log(data)
             for(let user of userLogged) {
                 if (user.token === data.receiver || user.token === data.author) {
                     user.sock.emit('message-private-receive', data);

@@ -74,14 +74,14 @@ socket.on('user-list', (data) => {
       addUserToList(i.token, i.user_name, () => {
          socket.emit('private-messages-get', {sender: getCookie('token'), token: i.token});
          selection = i.token;
-         console.log(selection)
       });
    }
 });
 
 socket.on('message-private-receive', (data) => {
-   console.log(data)
-   addMessage(data.content, data.time + ' • ' + data.author_name, data.author === getCookie('token'), data.author);
+   if (data.author === selection || data.author === getCookie('token')) {
+      addMessage(data.content, data.time + ' • ' + data.author_name, data.author === getCookie('token'), data.author);
+   }
 });
 
 
