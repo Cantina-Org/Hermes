@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
 import { queryDatabase } from './Utils/database.js';
-import { savePrivateMessage } from './Utils/savePrivateMessage.js';
+import { savePrivateMessage } from './Utils/privateMessage.js';
 
 
 function prettyTime() {
@@ -162,7 +162,7 @@ serverExpress.get('/', (request, response) => {
     response.sendFile(resolve('../client/index.html'));
 });
 
-serverExpress.get('/private/:userid', (request, response) => {
+serverExpress.get('/private/', (request, response) => {
     response.sendFile(resolve('../client/private-message.html'));
 });
 
