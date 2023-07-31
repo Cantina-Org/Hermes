@@ -143,13 +143,14 @@ serverSocket.on('connection', (socket) => {
     socket.on('message-private', (data) => {
         queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.author}'`, (results) => {
             data.author_name =  results[0].user_name;
+
+            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: Date.now()})
+
             for(let user of userLogged) {
                 if (user.token === data.receiver || user.token === data.author) {
                     user.sock.emit('message-private-receive', data);
                 }
             }
-
-            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: Date.now()})
         });
     });
 });
