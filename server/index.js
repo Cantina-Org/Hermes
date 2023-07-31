@@ -5,6 +5,7 @@ import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
 import { queryDatabase } from './Utils/database.js';
+import { savePrivateMessage } from './Utils/savePrivateMessage.js';
 
 
 function prettyTime() {
@@ -147,6 +148,8 @@ serverSocket.on('connection', (socket) => {
                     user.sock.emit('message-private-receive', data);
                 }
             }
+
+            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: Date.now()})
         });
     });
 });
