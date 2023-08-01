@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
 import { queryDatabase } from './Utils/database.js';
-import { savePrivateMessage } from './Utils/privateMessage.js';
+import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
 
 
 function prettyTime() {
@@ -118,23 +118,14 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('private-messages-get', (data) => {
-        let privateMessages;
-        let file1 = existsSync(`./messages/private-messages/${data.sender}|${data.token}.json`);
-        let file2 = existsSync(`./messages/private-messages/${data.token}|${data.sender}.json`);
-        if (file1){
-            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
-        } else if (file2){
-            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.token}|${data.sender}.json`));
-        } else {
-           writeFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`, '[]');
-           privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
-        }
+        let privateMessages = showPrivateMessage({author: data.user_1, receiver: data.user_2});
         privateMessages.forEach((msg) => {
-            let receiver;
             for (let users of userLogged) {
-                if (users.sock.connected && users.token === data.sender) {
-                    receiver = users;
-                    break;
+                if (users.token === data.user_1) {
+                    queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${msg.author}'`, (results) => {
+                        msg.author_name =  results[0].user_name;
+                        users.sock.emit('message-private-receive', msg);
+                    });
                 }
             }
         });

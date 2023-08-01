@@ -1,7 +1,7 @@
 let socket = io();
 let selection = null;
 
-function addMessage(content, time, isMine, token){
+function addMessage(content, time, isMine){
    const messageFeed = document.getElementById('message-feed');
    const messageElement = document.createElement('p');
 
@@ -10,7 +10,6 @@ function addMessage(content, time, isMine, token){
    const messageTime = document.createElement('a');
    messageTime.setAttribute('class', 'message-time');
    messageTime.innerText = time;
-   messageTime.href = '/private/'+token;
 
    const messageContent = document.createElement('p');
    messageContent.setAttribute('class', 'message-content');
@@ -72,7 +71,7 @@ socket.on('user-list', (data) => {
    for (const i of data.userList){
       if (i.token === getCookie('token')) continue;
       addUserToList(i.token, i.user_name, () => {
-         socket.emit('private-messages-get', {sender: getCookie('token'), token: i.token});
+         socket.emit('private-messages-get', {user_1: getCookie('token'), user_2: i.token});
          selection = i.token;
       });
    }
@@ -80,7 +79,7 @@ socket.on('user-list', (data) => {
 
 socket.on('message-private-receive', (data) => {
    if (data.author === selection || data.author === getCookie('token')) {
-      addMessage(data.content, data.time + ' • ' + data.author_name, data.author === getCookie('token'), data.author);
+      addMessage(data.content, data.time + ' • ' + data.author_name, data.author === getCookie('token'));
    }
 });
 
