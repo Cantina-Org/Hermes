@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedReference
+
 let socket = io();
 let selection = null;
 
@@ -94,8 +96,6 @@ addEventListener('submit', (event) => {
       author: getCookie('token'),
       receiver: selection
    };
-   if (messageInput !== '') {
-      socket.emit('message-private', data);
-      messageInput.value = '';
-   }
+   socket.emit('message-private', data);
+   messageInput.value = '';
 });

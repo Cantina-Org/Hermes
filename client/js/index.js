@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedReference
+
 let socket = io();
 
 function getCookie(name){
@@ -21,7 +23,7 @@ socket.on('redirect', (destination) => {
 });
 socket.on('login-error', (data) => {
    if (data.code === 404 && data.name === 'User Not Found'){
-       window.location.href = `http://${data.cerbere_fqdn}/auth/hermes`;
+       window.location.href = `https://${data.cerbere_fqdn}/auth/hermes`;
    }
 });
 
@@ -33,10 +35,8 @@ addEventListener('submit', (event) => {
     const msg = {
         content: messageInput.value,
     }
-    if (msg !== '') {
-        socket.emit('message', msg);
-        messageInput.value = '';
-    }
+    socket.emit('message', msg);
+    messageInput.value = '';
 });
 
 

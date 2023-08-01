@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedReference
+
 import { createConnection } from "mysql";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";

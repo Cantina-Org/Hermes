@@ -28,6 +28,7 @@ export function showPrivateMessage(data){
         privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.receiver}|${data.author}.json`));
     } else {
         writeFileSync(`./messages/private-messages/${data.author}|${data.receiver}.json`, '[]');
+        privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.author}|${data.receiver}.json`));
     }
 
     return privateMessages;
