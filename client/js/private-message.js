@@ -73,6 +73,8 @@ socket.on('user-list', (data) => {
    for (const i of data.userList){
       if (i.token === getCookie('token')) continue;
       addUserToList(i.token, i.user_name, () => {
+         const elementToDelete = document.getElementById("message-feed");
+         elementToDelete.innerHTML = "";
          socket.emit('private-messages-get', {user_1: getCookie('token'), user_2: i.token});
          selection = i.token;
       });

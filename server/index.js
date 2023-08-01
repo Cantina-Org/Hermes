@@ -10,8 +10,8 @@ import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
 
 
-function prettyTime() {
-    const time = new Date();
+function prettyTime(timecode) {
+    const time = new Date(timecode);
 
     const hours = time.getHours().toString().padStart(2, '0');
     const minutes = time.getMinutes().toString().padStart(2, '0');
@@ -52,7 +52,7 @@ if (!existsSync('./messages/general.json')){
 
 // Constante pour les serveurs
 const port = 3002;
-const address = networkInterfaces()['lo'][0].address;
+const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
 let id = 0;
@@ -113,8 +113,8 @@ serverSocket.on('connection', (socket) => {
                 console.log('User not logged in');
             });
         } else {
-            globalMessages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token});
-            broadcast(data.content, prettyTime(), userName.user_name, token);
+            globalMessages.push({content: data.content, time: prettyTime(Date.now()), author: userName.user_name, token: token});
+            broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
             savePublicMessages();
         }
     });
@@ -126,6 +126,7 @@ serverSocket.on('connection', (socket) => {
                 if (users.token === data.user_1) {
                     queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${msg.author}'`, (results) => {
                         msg.author_name =  results[0].user_name;
+                        msg.time = prettyTime(msg.time);
                         users.sock.emit('message-private-receive', msg);
                     });
                 }
@@ -136,9 +137,9 @@ serverSocket.on('connection', (socket) => {
     socket.on('message-private', (data) => {
         queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.author}'`, (results) => {
             data.author_name =  results[0].user_name;
+            data.time = prettyTime(Date.now())
 
-            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: Date.now()})
-
+            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: prettyTime(Date.now())})
             for(let user of userLogged) {
                 if (user.token === data.receiver || user.token === data.author) {
                     user.sock.emit('message-private-receive', data);
