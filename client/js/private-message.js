@@ -1,7 +1,9 @@
+// noinspection JSUnresolvedReference
+
 let socket = io();
 let selection = null;
 
-function addMessage(content, time, isMine, token){
+function addMessage(content, time, isMine){
    const messageFeed = document.getElementById('message-feed');
    const messageElement = document.createElement('p');
 
@@ -10,8 +12,6 @@ function addMessage(content, time, isMine, token){
    const messageTime = document.createElement('a');
    messageTime.setAttribute('class', 'message-time');
    messageTime.innerText = time;
-   console.log(token)
-   messageTime.href = '/private/'+token
 
    const messageContent = document.createElement('p');
    messageContent.setAttribute('class', 'message-content');
@@ -29,9 +29,9 @@ function getCookie(name){
    const matched = document.cookie.match(pattern);
    if(matched){
        const cookie = matched[0].split('=');
-       return cookie[1]
+       return cookie[1];
    }
-   return false
+   return false;
 }
 
 function addUserToList(
@@ -71,15 +71,33 @@ socket.on('user-list', (data) => {
    const userList = document.querySelector('.user-list');
    userList.innerHTML = '';
    for (const i of data.userList){
-      if (i.token === getCookie('token')) continue
+      if (i.token === getCookie('token')) continue;
       addUserToList(i.token, i.user_name, () => {
-         socket.emit('private-messages-get', {sender: getCookie('token'), token: i.token});
+         const elementToDelete = document.getElementById("message-feed");
+         elementToDelete.innerHTML = "";
+         socket.emit('private-messages-get', {user_1: getCookie('token'), user_2: i.token});
          selection = i.token;
       });
    }
 });
 
-socket.on('private-messages-send', (data) => {
-   console.log(data)
-   addMessage(data.content, data.time + ' • ' + data.author, data.isMine, data.token);
+socket.on('message-private-receive', (data) => {
+   if (data.author === selection || data.author === getCookie('token')) {
+      addMessage(data.content, data.time + ' • ' + data.author_name, data.author === getCookie('token'));
+   }
+});
+
+
+addEventListener('submit', (event) => {
+   event.preventDefault();
+   const messageInput = document.getElementById('message-input');
+
+
+   const data = {
+      content: messageInput.value,
+      author: getCookie('token'),
+      receiver: selection
+   };
+   socket.emit('message-private', data);
+   messageInput.value = '';
 });

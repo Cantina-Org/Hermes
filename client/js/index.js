@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedReference
+
 let socket = io();
 
 function getCookie(name){
@@ -5,9 +7,9 @@ function getCookie(name){
     const matched = document.cookie.match(pattern);
     if(matched){
         const cookie = matched[0].split('=');
-        return cookie[1]
+        return cookie[1];
     }
-    return false
+    return false;
 }
 
 socket.on('connect', function() {
@@ -20,24 +22,21 @@ socket.on('redirect', (destination) => {
     window.location.href = destination;
 });
 socket.on('login-error', (data) => {
-    console.log(data);
    if (data.code === 404 && data.name === 'User Not Found'){
-       window.location.href = `http://${data.cerbere_fqdn}/auth/hermes`;
+       window.location.href = `https://${data.cerbere_fqdn}/auth/hermes`;
    }
 });
 
 addEventListener('submit', (event) => {
     event.preventDefault();
-    const messageInput = document.getElementById('message-input')
+    const messageInput = document.getElementById('message-input');
 
 
     const msg = {
         content: messageInput.value,
     }
-    if (msg !== '') {
-        socket.emit('message', msg);
-        messageInput.value = '';
-    }
+    socket.emit('message', msg);
+    messageInput.value = '';
 });
 
 
@@ -50,8 +49,7 @@ function addMessage(content, time, isMine, token){
     const messageTime = document.createElement('a');
     messageTime.setAttribute('class', 'message-time');
     messageTime.innerText = time;
-    console.log(token)
-    messageTime.href = '/private/'+token
+    messageTime.href = '/private/'+token;
 
     const messageContent = document.createElement('p');
     messageContent.setAttribute('class', 'message-content');

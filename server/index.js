@@ -1,14 +1,17 @@
+// noinspection JSUnresolvedReference
+
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
-import { queryDatabase } from './Utils/database.js'
+import { queryDatabase } from './Utils/database.js';
+import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
 
 
-function prettyTime() {
-    const time = new Date();
+function prettyTime(timecode) {
+    const time = new Date(timecode);
 
     const hours = time.getHours().toString().padStart(2, '0');
     const minutes = time.getMinutes().toString().padStart(2, '0');
@@ -17,7 +20,7 @@ function prettyTime() {
     const month = time.getMonth().toString().padStart(2, '0');
     const year = time.getFullYear().toString().padStart(2, '0');
 
-    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds
+    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds;
 }
 
 function sendMessage(socket, message, time, author, sendTo, token) {
@@ -27,18 +30,8 @@ function sendMessage(socket, message, time, author, sendTo, token) {
         author: author,
         isMine: sendTo === author,
         token: token
-    }
+    };
     socket.emit('message', data);
-}
-
-async function sendPrivateMessage(receiver, message, time, author, senderToken) {
-    let data = {
-        content: message,
-        time: time,
-        author: author,
-        token: senderToken
-    }
-    receiver.send('private-messages-send', data);
 }
 
 
@@ -61,7 +54,7 @@ if (!existsSync('./messages/general.json')){
 const port = 3002;
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
-const globalMessages = JSON.parse(readFileSync('./messages/general.json'))
+const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
 let id = 0;
 
 // Création des serveurs
@@ -69,7 +62,6 @@ const serverExpress = express();
 const serverHTTP = createServer(serverExpress);
 const serverSocket = new SocketIOServer(serverHTTP);
 
-// serverExpress.use(express.static("../client/"));
 serverExpress.use(express.urlencoded({ extended: true }));
 
 // Web Socket:
@@ -84,8 +76,8 @@ serverSocket.on('connection', (socket) => {
             if (results.length === 0) {
                 queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
                     socket.emit('login-error', data={
-                        name: "User Not Found",
-                        code: 404,
+                        name: "Unauthorized: User Not Logged",
+                        code: 401,
                         cerbere_fqdn: results[0].fqdn
                     });
                 });
@@ -103,7 +95,7 @@ serverSocket.on('connection', (socket) => {
                 });
                 if (data.privateMessage){
                     queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
-                        socket.emit('user-list', {userList: results})
+                        socket.emit('user-list', {userList: results});
                     });
                 } else {
                     globalMessages.forEach((msg) => {
@@ -121,36 +113,40 @@ serverSocket.on('connection', (socket) => {
                 console.log('User not logged in');
             });
         } else {
-            globalMessages.push({content: data.content, time: prettyTime(), author: userName.user_name, token: token})
-            broadcast(data.content, prettyTime(), userName.user_name, token);
+            globalMessages.push({content: data.content, time: prettyTime(Date.now()), author: userName.user_name, token: token});
+            broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
             savePublicMessages();
         }
     });
 
     socket.on('private-messages-get', (data) => {
-        let privateMessages;
-        let file1 = existsSync(`./messages/private-messages/${data.sender}|${data.token}.json`);
-        let file2 = existsSync(`./messages/private-messages/${data.token}|${data.sender}.json`);
-        if (file1){
-            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
-        } else if (file2){
-            privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.token}|${data.sender}.json`));
-        } else {
-           writeFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`, '[]');
-           privateMessages = JSON.parse(readFileSync(`./messages/private-messages/${data.sender}|${data.token}.json`));
-        }
+        let privateMessages = showPrivateMessage({author: data.user_1, receiver: data.user_2});
         privateMessages.forEach((msg) => {
-            let receiver;
             for (let users of userLogged) {
-                if (users.sock.connected && users.token === data.sender) {
-                    receiver = users;
-                    break;
+                if (users.token === data.user_1) {
+                    queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${msg.author}'`, (results) => {
+                        msg.author_name =  results[0].user_name;
+                        msg.time = prettyTime(msg.time);
+                        users.sock.emit('message-private-receive', msg);
+                    });
                 }
             }
-            // sendPrivateMessage(receiver.sock, msg.content, msg.time, msg.author, null, msg.token).then(r => );
         });
     });
 
+    socket.on('message-private', (data) => {
+        queryDatabase(`SELECT user_name FROM cantina_administration.user WHERE token='${data.author}'`, (results) => {
+            data.author_name =  results[0].user_name;
+            data.time = prettyTime(Date.now())
+
+            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: prettyTime(Date.now())})
+            for(let user of userLogged) {
+                if (user.token === data.receiver || user.token === data.author) {
+                    user.sock.emit('message-private-receive', data);
+                }
+            }
+        });
+    });
 });
 
 serverHTTP.listen(port, () => {
