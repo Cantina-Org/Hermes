@@ -139,7 +139,7 @@ serverSocket.on('connection', (socket) => {
             data.author_name =  results[0].user_name;
             data.time = prettyTime(Date.now())
 
-            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: prettyTime(Date.now())})
+            savePrivateMessage({author: data.author, receiver: data.receiver, content: data.content, time: data.time})
             for(let user of userLogged) {
                 if (user.token === data.receiver || user.token === data.author) {
                     user.sock.emit('message-private-receive', data);
