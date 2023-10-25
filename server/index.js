@@ -205,7 +205,7 @@ serverExpress.get('/login', (request, response) => {
 
 if (debug) {
     serverExpress.get('/debug/choose_user', (request, response) => {
-        response.sendFile(resolve('../client/debug/chose_user.html'))
+        response.sendFile(resolve('../client/debug/choose_user.html'))
     });
 }
 

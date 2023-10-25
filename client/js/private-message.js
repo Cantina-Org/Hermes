@@ -1,5 +1,3 @@
-// noinspection JSUnresolvedReference
-
 let socket = io();
 let selection = null;
 
