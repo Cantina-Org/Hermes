@@ -164,6 +164,14 @@ serverSocket.on('connection', (socket) => {
             }
         });
     });
+
+    socket.on('debug_choose_user', () => {
+        if (debug){
+            queryDatabase(`SELECT token, user_name FROM cantina_administration.user`, (results) => {
+                socket.emit('message-private-debug_choose_user_final', results);
+            });
+        }
+    });
 });
 
 serverHTTP.listen(port, () => {
@@ -194,6 +202,13 @@ serverExpress.get('/login', (request, response) => {
         response.redirect(`https://${results[0].fqdn}/auth/hermes`)
     });
 });
+
+if (debug) {
+    serverExpress.get('/debug/choose_user', (request, response) => {
+        response.sendFile(resolve('../client/debug/chose_user.html'))
+    });
+}
+
 
 setInterval(() => {
     for (let i = 0; userLogged.length-1>i; i++) {

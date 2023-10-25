@@ -21,5 +21,5 @@ Aller dans le fichier `server/index.js` et modifier la variable `debug` ligne 1 
 Lancer le fichier `server/index.js` via votre éditeur de code. (Vous devez executer le fichier depuis le dossier `server`).
 
 ### Étapes 5:
-Rendez vous sur la page `page à définir mais surement /debug/choose_user` pour choisir l'utilisateur que vous utiliserez.
+Rendez vous sur la page `/debug/choose_user` pour choisir l'utilisateur que vous utiliserez.
 
