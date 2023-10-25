@@ -6,7 +6,7 @@
 
 ## Pour faire une contribution:
 
-#### Attention: l'installation de l'outil [Olympe](https://github.com/Cantina-Org/Olympe) est obligatoire! (L'outil initie la base de données qui est indispensable)
+#### Attention: l'installation de l'outil [Olympe](https://github.com/Cantina-Org/Olympe) (conseillé via [Ouranos](https://github.com/Cantina-Org/Ouranos)) est obligatoire! (L'outil initie la base de données qui est indispensable)
 
 ### Étape 1:
 Cloner votre fork du projet Hermes.
@@ -21,5 +21,5 @@ Aller dans le fichier `server/index.js` et modifier la variable `debug` ligne 1 
 Lancer le fichier `server/index.js` via votre éditeur de code. (Vous devez executer le fichier depuis le dossier `server`).
 
 ### Étapes 5:
-
+Rendez vous sur la page `page à définir mais surement /debug/choose_user` pour choisir l'utilisateur que vous utiliserez.
 
