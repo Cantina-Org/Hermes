@@ -51,7 +51,7 @@ if (!existsSync('./messages/general.json')){
 
 
 // Constante pour les serveurs
-const port = 3002;
+const port = 3003;
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
@@ -170,6 +170,12 @@ serverExpress.get('/css/:fileName', (request, response) => {
 
 serverExpress.get('/favicon.ico', (request, response) => {
     response.sendFile(resolve('../client/favicon.ico'));
+});
+
+serverExpress.get('/login', (request, response) => {
+    queryDatabase("SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'", (results) => {
+        response.redirect(`https://${results[0].fqdn}/auth/hermes`)
+    });
 });
 
 setInterval(() => {
