@@ -1,4 +1,4 @@
-// noinspection JSUnresolvedReference
+const debug = true;
 
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
