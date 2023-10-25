@@ -1,4 +1,4 @@
-const debug = true;
+let debug = true;
 
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
@@ -8,6 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
+import confirm from '@inquirer/confirm';
 
 
 function prettyTime(timecode) {
@@ -45,13 +46,29 @@ function savePublicMessages() {
     writeFileSync('./messages/general.json', JSON.stringify(globalMessages));
 }
 
+
+// Verification mode débug
+if (debug) {
+    console.log('Attention: le mode débug est activé. Ce qui veux dire qu\'un utilisateur peux se connecter à tout les comptes sans mots de passe!');
+    const answer = await confirm({ message: 'Voulez vous continuer en mode débug?' });
+
+    if (answer) {
+        console.log('Mode Débug Activé! Faites attention!')
+    } else if (!answer){
+        console.log('Désactivation du mode Débug...')
+        debug = false
+        console.log('Mode Débug désactivé!')
+    }
+}
+
+
 if (!existsSync('./messages/general.json')){
     writeFileSync('./messages/general.json', '[]');
 }
 
 
 // Constante pour les serveurs
-const port = 3003;
+const port = 3003; // Port à prendre dans le fichier config.json
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'));

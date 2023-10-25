@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Cantina-Org/Hermes#readme",
   "dependencies": {
+    "@inquirer/confirm": "^2.0.14",
     "argon2": "^0.30.3",
     "body-parser": "^1.20.2",
     "chokidar": "^3.5.3",
