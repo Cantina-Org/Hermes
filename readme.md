@@ -1,33 +1,33 @@
 # Hermes
 
-Hermes est un service de la suite Cantina permettant de communiquer avec les autres utilisateurs de Cantina.
+Hermes est le `chat` en ligne de la suite cantina
 
-### ⚠️: Installer Hermes peux causer des problèmes sur votre machine si vous faites de mauvaises manipulation! Nous n'en sommes en aucun cas responsable!
+### ⚠️: Installer Hermes peut causer des problèmes sur votre machine si vous faites de mauvaises manipulations ! À vos risques et périls 😆 !
 
 ***
 
-## Pour faire une contribution:
+## Contribuer :
 
-#### Attention: l'installation de l'outil [Olympe](https://github.com/Cantina-Org/Olympe) (conseillé via [Ouranos](https://github.com/Cantina-Org/Ouranos)) est obligatoire! (L'outil initie la base de données qui est indispensable)
+#### Attention : l'installation de l'outil [Olympe](https://github.com/Cantina-Org/Olympe) (conseillé via [Ouranos](https://github.com/Cantina-Org/Ouranos)) est obligatoire ! (Sinon c'est un peu comme avoir une voiture sans les roues 😇.)
 
 ### Étape 1:
-Cloner votre fork du projet Hermes.
+Cloner votre [fork](https://github.com/Matyu9/Hermes/fork) de Hermes.
 
 ### Étapes 2:
-Aller dans le fichier `server/index.js` et modifier la variable `debug` ligne 1 vers `true`.
+Mettre la variable `debug` à `true` dans `server/index.js` (ligne 1).
 
 ### Étapes 3:
-Éxecuter `npm i` à la racine du projet.
+Exécuter `npm i` à la racine du projet.
 
 ### Étapes 4:
-Lancer le fichier `server/index.js` via votre éditeur de code. (Vous devez executer le fichier depuis le dossier `server`).
+Lancer le fichier `server/index.js` via votre éditeur de code. (Vous devez exécuter le fichier depuis le dossier `server`).
 
 ### Étapes 5:
-Rendez vous sur la page `/debug/choose_user` pour choisir l'utilisateur que vous utiliserez.
+Rendez-vous sur la page `[host:port]/debug/choose_user` pour choisir l'utilisateur que vous utiliserez.
 
 *** 
 
 ## Pour utiliser Cantina Hermes:
 
-Nous ne fournissons aucun installateur pour la production pour le moment. Le service étant instable, nous préferons finir le développement avant de fournir un moyen d'installation rapide.
-Cependant, si vous voullez quand même utiliser Cantina Hermes vous pouvez quand même l'installer via la suite d'étape au dessus.
+Nous ne fournissons aucun installateur pour la production pour le moment. Le service étant instable, nous préférons finir le développement avant de vous fournir un moyen d'installation rapide.
+Cependant, si vous souhaitez utiliser `Cantina Hermes` vous pouvez quand même l'installer (↑ voir ci-dessus ↑).
