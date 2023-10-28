@@ -30,4 +30,4 @@ Rendez-vous sur la page `[host:port]/debug/choose_user` pour choisir l'utilisate
 ## Pour utiliser Cantina Hermes:
 
 Nous ne fournissons aucun installateur pour la production pour le moment. Le service étant instable, nous préférons finir le développement avant de vous fournir un moyen d'installation rapide.
-Cependant, si vous souhaitez utiliser `Cantina Hermes` vous pouvez quand même l'installer (↑ voir ci-dessus ↑).
+Cependant, si vous souhaitez utiliser `Cantina Hermes` vous pouvez quand même l'installer (↑ voir ci-dessus ↑)
