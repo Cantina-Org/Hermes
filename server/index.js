@@ -165,10 +165,19 @@ serverSocket.on('connection', (socket) => {
         });
     });
 
-    socket.on('debug_choose_user', () => {
+    socket.on('debug-select-user', () => {
         if (debug){
             queryDatabase(`SELECT user_name FROM cantina_administration.user`, (results) => {
-                socket.emit('message-private-debug_select_user_final', results);
+                socket.emit('debug-select-user-final', results);
+            });
+        }
+    });
+
+    socket.on('debug-choose-user', (data) => {
+        console.log(data)
+        if (data){
+            queryDatabase(`SELECT token FROM cantina_administration.user WHERE user_name="${data}"`, (results) => {
+                socket.emit('debug-choose-user-final', results[0]);
             });
         }
     });
