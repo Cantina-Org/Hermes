@@ -1,4 +1,4 @@
-// noinspection JSUnresolvedReference
+let debug = true;
 
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
@@ -8,6 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
+import confirm from '@inquirer/confirm';
 
 
 function prettyTime(timecode) {
@@ -45,13 +46,29 @@ function savePublicMessages() {
     writeFileSync('./messages/general.json', JSON.stringify(globalMessages));
 }
 
+
+// Verification mode débug
+if (debug) {
+    console.log('Attention: le mode debug est activé. Ce qui veux dire qu\'un utilisateur peux se connecter à tout les comptes sans mot de passe!');
+    const answer = await confirm({ message: 'Voulez vous continuer en mode debug ?' });
+
+    if (answer) {
+        console.log('Mode Débug Activé! Faites attention!')
+    } else if (!answer){
+        console.log('Désactivation du mode Débug...')
+        debug = false
+        console.log('Mode Débug désactivé!')
+    }
+}
+
+
 if (!existsSync('./messages/general.json')){
     writeFileSync('./messages/general.json', '[]');
 }
 
 
 // Constante pour les serveurs
-const port = 3002;
+const port = 3003; // Port à prendre dans le fichier config.json
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
@@ -147,6 +164,23 @@ serverSocket.on('connection', (socket) => {
             }
         });
     });
+
+    socket.on('debug-select-user', () => {
+        if (debug){
+            queryDatabase(`SELECT user_name FROM cantina_administration.user`, (results) => {
+                socket.emit('debug-select-user-final', results);
+            });
+        }
+    });
+
+    socket.on('debug-choose-user', (data) => {
+        console.log(data)
+        if (data){
+            queryDatabase(`SELECT token FROM cantina_administration.user WHERE user_name="${data}"`, (results) => {
+                socket.emit('debug-choose-user-final', results[0]);
+            });
+        }
+    });
 });
 
 serverHTTP.listen(port, () => {
@@ -171,6 +205,19 @@ serverExpress.get('/css/:fileName', (request, response) => {
 serverExpress.get('/favicon.ico', (request, response) => {
     response.sendFile(resolve('../client/favicon.ico'));
 });
+
+serverExpress.get('/login', (request, response) => {
+    queryDatabase("SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'", (results) => {
+        response.redirect(`https://${results[0].fqdn}/auth/hermes`)
+    });
+});
+
+if (debug) {
+    serverExpress.get('/debug/choose_user', (request, response) => {
+        response.sendFile(resolve('../client/debug/choose_user.html'))
+    });
+}
+
 
 setInterval(() => {
     for (let i = 0; userLogged.length-1>i; i++) {
