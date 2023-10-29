@@ -167,8 +167,8 @@ serverSocket.on('connection', (socket) => {
 
     socket.on('debug_choose_user', () => {
         if (debug){
-            queryDatabase(`SELECT token, user_name FROM cantina_administration.user`, (results) => {
-                socket.emit('message-private-debug_choose_user_final', results);
+            queryDatabase(`SELECT user_name FROM cantina_administration.user`, (results) => {
+                socket.emit('message-private-debug_select_user_final', results);
             });
         }
     });
