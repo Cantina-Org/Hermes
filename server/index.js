@@ -6,9 +6,10 @@ import { Server as SocketIOServer } from 'socket.io';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
+import confirm from '@inquirer/confirm'
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
-import confirm from '@inquirer/confirm';
+import { broadcast, savePublicMessages } from "./Utils/publicMessage.js";
 
 
 function prettyTime(timecode) {
@@ -24,33 +25,11 @@ function prettyTime(timecode) {
     return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds;
 }
 
-function sendMessage(socket, message, time, author, sendTo, token) {
-    let data  = {
-        content: message,
-        time: time,
-        author: author,
-        isMine: sendTo === author,
-        token: token
-    };
-    socket.emit('message', data);
-}
-
-
-async function broadcast(message, time, author, token) {
-    for (let element of userLogged){
-        sendMessage(element.sock, message, time, author, element.userName, token);
-    }
-}
-
-function savePublicMessages() {
-    writeFileSync('./messages/general.json', JSON.stringify(globalMessages));
-}
-
 
 // Verification mode débug
 if (debug) {
-    console.log('Attention: le mode débug est activé. Ce qui veux dire qu\'un utilisateur peux se connecter à tout les comptes sans mots de passe!');
-    const answer = await confirm({ message: 'Voulez vous continuer en mode débug?' });
+    console.log('Attention: le mode debug est activé. Ce qui veux dire qu\'un utilisateur peux se connecter à tout les comptes sans mot de passe!');
+    const answer = await confirm({ message: 'Voulez vous continuer en mode debug ?' });
 
     if (answer) {
         console.log('Mode Débug Activé! Faites attention!')
@@ -132,7 +111,7 @@ serverSocket.on('connection', (socket) => {
         } else {
             globalMessages.push({content: data.content, time: prettyTime(Date.now()), author: userName.user_name, token: token});
             broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
-            savePublicMessages();
+            savePublicMessages(globalMessages);
         }
     });
 
