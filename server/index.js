@@ -49,8 +49,8 @@ function savePublicMessages() {
 
 // Verification mode débug
 if (debug) {
-    console.log('Attention: le mode débug est activé. Ce qui veux dire qu\'un utilisateur peux se connecter à tout les comptes sans mots de passe!');
-    const answer = await confirm({ message: 'Voulez vous continuer en mode débug?' });
+    console.log('Attention: le mode debug est activé. Ce qui veux dire qu\'un utilisateur peux se connecter à tout les comptes sans mot de passe!');
+    const answer = await confirm({ message: 'Voulez vous continuer en mode debug ?' });
 
     if (answer) {
         console.log('Mode Débug Activé! Faites attention!')
