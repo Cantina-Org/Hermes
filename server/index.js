@@ -1,4 +1,4 @@
-let debug = true;
+let debug = false;
 
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
