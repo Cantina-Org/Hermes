@@ -1,6 +1,6 @@
-import {writeFileSync} from "fs";
+import { writeFileSync } from "fs";
 
-function sendMessage(socket, message, time, author, sendTo, token) {
+export function sendMessage(socket, message, time, author, sendTo, token) {
     let data  = {
         content: message,
         time: time,

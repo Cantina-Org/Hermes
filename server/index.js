@@ -9,22 +9,9 @@ import express from 'express';
 import confirm from '@inquirer/confirm'
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
-import { broadcast, savePublicMessages } from "./Utils/publicMessage.js";
-import { saveAnnouncement } from "./Utils/announcement.js";
-
-
-function prettyTime(timecode) {
-    const time = new Date(timecode);
-
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    const day = time.getDay().toString().padStart(2, '0');
-    const month = time.getMonth().toString().padStart(2, '0');
-    const year = time.getFullYear().toString().padStart(2, '0');
-
-    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds;
-}
+import { broadcast, savePublicMessages, sendMessage } from "./Utils/publicMessage.js";
+import { broadcastAnnouncement } from "./Utils/announcement.js";
+import { prettyTime } from "./Utils/prettyTime.js";
 
 
 // Verification mode débug
@@ -111,7 +98,7 @@ serverSocket.on('connection', (socket) => {
             });
         } else {
             globalMessages.push({content: data.content, time: prettyTime(Date.now()), author: userName.user_name, token: token});
-            broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
+            void broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
             savePublicMessages(globalMessages);
         }
     });
@@ -146,10 +133,16 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('announcement-send', (data) => {
-        queryDatabase(`SELECT admin FROM cantina_administration.user WHERE token=${data.author}`, (results) => {
+        queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${data.author}"`, (results) => {
             if (results[0].admin) {
-                saveAnnouncement({author: data.author, content: data.content, time: data.time})
+                void broadcastAnnouncement(data.content, Date.now(), results[0].user_name, data.token);
             }
+        });
+    });
+
+    socket.on('is-user-admin', (data) => {
+        queryDatabase(`SELECT admin FROM cantina_administration.user WHERE token="${data.token}"`, (results) => {
+            socket.emit('is-user-admin-response', {isAdmin: !!results[0].admin});
         });
     });
 
@@ -179,6 +172,10 @@ serverExpress.get('/', (request, response) => {
 
 serverExpress.get('/private/', (request, response) => {
     response.sendFile(resolve('../client/private-message.html'));
+});
+
+serverExpress.get('/announcement/', (request, response) => {
+    response.sendFile(resolve('../client/announcement.html'));
 });
 
 serverExpress.get('/js/:fileName', (request, response) => {
