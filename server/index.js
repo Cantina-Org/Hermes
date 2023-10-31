@@ -10,6 +10,7 @@ import confirm from '@inquirer/confirm'
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
 import { broadcast, savePublicMessages } from "./Utils/publicMessage.js";
+import { saveAnnouncement } from "./Utils/announcement.js";
 
 
 function prettyTime(timecode) {
@@ -144,6 +145,14 @@ serverSocket.on('connection', (socket) => {
         });
     });
 
+    socket.on('announcement-send', (data) => {
+        queryDatabase(`SELECT admin FROM cantina_administration.user WHERE token=${data.author}`, (results) => {
+            if (results[0].admin) {
+                saveAnnouncement({author: data.author, content: data.content, time: data.time})
+            }
+        });
+    });
+
     socket.on('debug-select-user', () => {
         if (debug){
             queryDatabase(`SELECT user_name FROM cantina_administration.user`, (results) => {
@@ -153,7 +162,6 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('debug-choose-user', (data) => {
-        console.log(data)
         if (data){
             queryDatabase(`SELECT token FROM cantina_administration.user WHERE user_name="${data}"`, (results) => {
                 socket.emit('debug-choose-user-final', results[0]);
