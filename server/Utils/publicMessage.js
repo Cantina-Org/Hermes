@@ -12,7 +12,7 @@ export function sendMessage(socket, message, time, author, sendTo, token) {
 }
 
 
-export async function broadcast(message, time, author, token) {
+export async function broadcast(message, time, author, token, userLogged) {
     for (let element of userLogged){
         sendMessage(element.sock, message, time, author, element.userName, token);
     }

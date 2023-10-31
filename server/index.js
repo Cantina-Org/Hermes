@@ -98,7 +98,7 @@ serverSocket.on('connection', (socket) => {
             });
         } else {
             globalMessages.push({content: data.content, time: prettyTime(Date.now()), author: userName.user_name, token: token});
-            void broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
+            void broadcast(data.content, prettyTime(Date.now()), userName.user_name, token, userLogged);
             savePublicMessages(globalMessages);
         }
     });
@@ -135,7 +135,7 @@ serverSocket.on('connection', (socket) => {
     socket.on('announcement-send', (data) => {
         queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${data.author}"`, (results) => {
             if (results[0].admin) {
-                void broadcastAnnouncement(data.content, Date.now(), results[0].user_name, data.token);
+                void broadcastAnnouncement(data.content, Date.now(), results[0].user_name, data.token, userLogged);
             }
         });
     });

@@ -1,6 +1,6 @@
 import { writeFileSync } from "fs";
 
-export async function broadcastAnnouncement(message, time, author, token){
+export async function broadcastAnnouncement(message, time, author, token, userLogged){
     saveAnnouncement({content: message, time: time, author: author, token: token})
     for (let element of userLogged){
         sendAnnoucement(element.sock, message, time, author, element.userName, token)
