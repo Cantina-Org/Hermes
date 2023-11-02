@@ -14,7 +14,7 @@ function sendAnnoucement(socket, message, time, author, sendTo, token) {
         isMine: sendTo === author,
         token: token
     };
-    socket.emit('announcement', data);
+    socket.emit('announcement-receive', data);
 }
 
 export function saveAnnouncement(messagesToSave) {

@@ -11,19 +11,36 @@ function getCookie(name){
 }
 
 socket.on('connect', function() {
-    socket.emit('login', {userToken: getCookie('token'), privateMessage: false});
+    if (!getCookie('token')){
+        socket.emit('get-cerbere-fqdn');
+    } else {
+        socket.emit('login', {userToken: getCookie('token'), privateMessage: false});
+    }
+
+});
+
+socket.on('announcement-receive', (data) => {
+
 });
 
 socket.on('login-error', (data) => {
     if (data.code === 404 && data.name === 'User Not Found'){
-        window.location.href = `https://${data.cerbere_fqdn}/auth/hermes`;
+        window.location.replace(`https://${data.cerbere_fqdn}/auth/hermes`);
+    } else if (data.code === 401 && data.name === 'Unauthorized: User Not Logged') {
+        window.location.replace(`https://${data.cerbere_fqdn}/auth/hermes`);
     }
 });
 
-socket.emit('is-user-admin', {token: getCookie('token')});
+socket.emit('is-user-admin', {
+    token: getCookie('token')
+});
 
 socket.on('is-user-admin-response', (data) => {
     if (data.isAdmin) {
         document.getElementById('message-form').hidden = false;
     }
+});
+
+socket.on('send-cerbere-fqdn', (data) => {
+    window.location.replace(`https://${data.fqdn}/auth/hermes`);
 });

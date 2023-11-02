@@ -1,4 +1,4 @@
-let debug = false;
+let debug = true;
 
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
@@ -141,7 +141,7 @@ serverSocket.on('connection', (socket) => {
             if (results[0].admin) {
                 allAnnouncement.push({content: data.content, time: prettyTime(Date.now()), author: results[0].user_name, token: data.token});
                 saveAnnouncement(allAnnouncement);
-                void broadcastAnnouncement(data.content, Date.now(), results[0].user_name, data.token, userLogged);
+                void broadcastAnnouncement(data.content, prettyTime(Date.now()), results[0].user_name, data.token, userLogged);
             }
         });
     });
@@ -150,6 +150,12 @@ serverSocket.on('connection', (socket) => {
         queryDatabase(`SELECT admin FROM cantina_administration.user WHERE token="${data.token}"`, (results) => {
             socket.emit('is-user-admin-response', {isAdmin: !!results[0].admin});
         });
+    });
+
+    socket.on('get-cerbere-fqdn', () => {
+       queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+           socket.emit('send-cerbere-fqdn', {name: 'cerbere', fqdn: results[0].fqdn});
+       });
     });
 
     socket.on('debug-select-user', () => {
