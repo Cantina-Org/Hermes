@@ -10,7 +10,7 @@ import confirm from '@inquirer/confirm'
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
 import { broadcast, savePublicMessages, sendMessage } from "./Utils/publicMessage.js";
-import { broadcastAnnouncement } from "./Utils/announcement.js";
+import {broadcastAnnouncement, saveAnnouncement} from "./Utils/announcement.js";
 import { prettyTime } from "./Utils/prettyTime.js";
 
 
@@ -33,12 +33,16 @@ if (!existsSync('./messages/general.json')){
     writeFileSync('./messages/general.json', '[]');
 }
 
+if (!existsSync('./messages/announcement.json')){
+    writeFileSync('./messages/announcement.json', '[]');
+}
 
 // Constante pour les serveurs
 const port = 3003; // Port à prendre dans le fichier config.json
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
+const allAnnouncement = JSON.parse(readFileSync('./messages/announcement.json'));
 let id = 0;
 
 // Création des serveurs
@@ -133,8 +137,10 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('announcement-send', (data) => {
-        queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${data.author}"`, (results) => {
+        queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${data.token}"`, (results) => {
             if (results[0].admin) {
+                allAnnouncement.push({content: data.content, time: prettyTime(Date.now()), author: results[0].user_name, token: data.token});
+                saveAnnouncement(allAnnouncement);
                 void broadcastAnnouncement(data.content, Date.now(), results[0].user_name, data.token, userLogged);
             }
         });

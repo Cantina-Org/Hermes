@@ -10,6 +10,16 @@ function getCookie(name){
     return false;
 }
 
+socket.on('connect', function() {
+    socket.emit('login', {userToken: getCookie('token'), privateMessage: false});
+});
+
+socket.on('login-error', (data) => {
+    if (data.code === 404 && data.name === 'User Not Found'){
+        window.location.href = `https://${data.cerbere_fqdn}/auth/hermes`;
+    }
+});
+
 socket.emit('is-user-admin', {token: getCookie('token')});
 
 socket.on('is-user-admin-response', (data) => {
