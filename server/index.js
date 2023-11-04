@@ -137,12 +137,17 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('announcement-send', (data) => {
-        queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${data.token}"`, (results) => {
-            if (results[0].admin) {
-                allAnnouncement.push({content: data.content, time: prettyTime(Date.now()), author: results[0].user_name, token: data.token});
-                saveAnnouncement(allAnnouncement);
-                void broadcastAnnouncement(data.content, prettyTime(Date.now()), results[0].user_name, data.token, userLogged);
+        queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${token}"`, (results) => {
+            try {
+                if (results[0].admin) {
+                    allAnnouncement.push({content: data.content, time: prettyTime(Date.now()), author: results[0].user_name, token: token});
+                    saveAnnouncement(allAnnouncement);
+                    void broadcastAnnouncement(data.content, prettyTime(Date.now()), results[0].user_name, data.token, userLogged);
+                }
+            } catch (error) {
+                console.log('Utilisateur non authentifié ou pas administrateur, non sauvegarde de l\'annonce!')
             }
+
         });
     });
 

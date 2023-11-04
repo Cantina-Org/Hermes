@@ -44,3 +44,16 @@ socket.on('is-user-admin-response', (data) => {
 socket.on('send-cerbere-fqdn', (data) => {
     window.location.replace(`https://${data.fqdn}/auth/hermes`);
 });
+
+
+addEventListener('submit', (event) => {
+    event.preventDefault();
+    const messageInput = document.getElementById('message-input');
+
+
+    const data = {
+        content: messageInput.value,
+    }
+    socket.emit('announcement-send', data);
+    messageInput.value = '';
+});
