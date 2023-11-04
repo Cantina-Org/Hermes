@@ -15,7 +15,7 @@ socket.on('debug-select-user-final', (data) => {
 socket.on('debug-choose-user-final', (data) => {
     console.log(data)
    if (data){
-        document.cookie = `token=${data.token}`;
+        document.cookie = `token=${data.token};path=/`;
    }
 });
 

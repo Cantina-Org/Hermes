@@ -1,4 +1,4 @@
-let debug = false;
+let debug = true;
 
 import { networkInterfaces } from 'os';
 import { createServer } from 'http';
@@ -6,45 +6,12 @@ import { Server as SocketIOServer } from 'socket.io';
 import { resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import express from 'express';
+import confirm from '@inquirer/confirm'
 import { queryDatabase } from './Utils/database.js';
 import { savePrivateMessage, showPrivateMessage } from './Utils/privateMessage.js';
-import confirm from '@inquirer/confirm';
-
-
-function prettyTime(timecode) {
-    const time = new Date(timecode);
-
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    const day = time.getDay().toString().padStart(2, '0');
-    const month = time.getMonth().toString().padStart(2, '0');
-    const year = time.getFullYear().toString().padStart(2, '0');
-
-    return day+'/'+month+'/'+year+' '+hours+':'+minutes+':'+seconds;
-}
-
-function sendMessage(socket, message, time, author, sendTo, token) {
-    let data  = {
-        content: message,
-        time: time,
-        author: author,
-        isMine: sendTo === author,
-        token: token
-    };
-    socket.emit('message', data);
-}
-
-
-async function broadcast(message, time, author, token) {
-    for (let element of userLogged){
-        sendMessage(element.sock, message, time, author, element.userName, token);
-    }
-}
-
-function savePublicMessages() {
-    writeFileSync('./messages/general.json', JSON.stringify(globalMessages));
-}
+import { broadcast, savePublicMessages, sendMessage } from "./Utils/publicMessage.js";
+import {broadcastAnnouncement, saveAnnouncement} from "./Utils/announcement.js";
+import { prettyTime } from "./Utils/prettyTime.js";
 
 
 // Verification mode débug
@@ -66,12 +33,16 @@ if (!existsSync('./messages/general.json')){
     writeFileSync('./messages/general.json', '[]');
 }
 
+if (!existsSync('./messages/announcement.json')){
+    writeFileSync('./messages/announcement.json', '[]');
+}
 
 // Constante pour les serveurs
 const port = 3003; // Port à prendre dans le fichier config.json
 const address = networkInterfaces()['wlo1'][0].address;
 const userLogged = [];
 const globalMessages = JSON.parse(readFileSync('./messages/general.json'));
+const allAnnouncement = JSON.parse(readFileSync('./messages/announcement.json'));
 let id = 0;
 
 // Création des serveurs
@@ -114,6 +85,8 @@ serverSocket.on('connection', (socket) => {
                     queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
                         socket.emit('user-list', {userList: results});
                     });
+                } else if (data.announcement){
+                      socket.emit('announcement-receive-first', allAnnouncement)
                 } else {
                     globalMessages.forEach((msg) => {
                         sendMessage(socket, msg.content, msg.time, msg.author, null, token);
@@ -131,8 +104,8 @@ serverSocket.on('connection', (socket) => {
             });
         } else {
             globalMessages.push({content: data.content, time: prettyTime(Date.now()), author: userName.user_name, token: token});
-            broadcast(data.content, prettyTime(Date.now()), userName.user_name, token);
-            savePublicMessages();
+            void broadcast(data.content, prettyTime(Date.now()), userName.user_name, token, userLogged);
+            savePublicMessages(globalMessages);
         }
     });
 
@@ -165,6 +138,33 @@ serverSocket.on('connection', (socket) => {
         });
     });
 
+    socket.on('announcement-send', (data) => {
+        queryDatabase(`SELECT admin, user_name FROM cantina_administration.user WHERE token="${token}"`, (results) => {
+            try {
+                if (results[0].admin) {
+                    allAnnouncement.push({content: data.content, time: prettyTime(Date.now()), author: results[0].user_name, token: token});
+                    saveAnnouncement(allAnnouncement);
+                    void broadcastAnnouncement(data.content, prettyTime(Date.now()), results[0].user_name, token, userLogged);
+                }
+            } catch (error) {
+                console.log('Utilisateur non authentifié ou pas administrateur, non sauvegarde de l\'annonce!')
+            }
+
+        });
+    });
+
+    socket.on('is-user-admin', (data) => {
+        queryDatabase(`SELECT admin FROM cantina_administration.user WHERE token="${data.token}"`, (results) => {
+            socket.emit('is-user-admin-response', {isAdmin: !!results[0].admin});
+        });
+    });
+
+    socket.on('get-cerbere-fqdn', () => {
+       queryDatabase(`SELECT fqdn FROM cantina_administration.domain WHERE name='cerbere'`, (results) => {
+           socket.emit('send-cerbere-fqdn', {name: 'cerbere', fqdn: results[0].fqdn});
+       });
+    });
+
     socket.on('debug-select-user', () => {
         if (debug){
             queryDatabase(`SELECT user_name FROM cantina_administration.user`, (results) => {
@@ -174,7 +174,6 @@ serverSocket.on('connection', (socket) => {
     });
 
     socket.on('debug-choose-user', (data) => {
-        console.log(data)
         if (data){
             queryDatabase(`SELECT token FROM cantina_administration.user WHERE user_name="${data}"`, (results) => {
                 socket.emit('debug-choose-user-final', results[0]);
@@ -192,6 +191,10 @@ serverExpress.get('/', (request, response) => {
 
 serverExpress.get('/private/', (request, response) => {
     response.sendFile(resolve('../client/private-message.html'));
+});
+
+serverExpress.get('/announcement/', (request, response) => {
+    response.sendFile(resolve('../client/announcement.html'));
 });
 
 serverExpress.get('/js/:fileName', (request, response) => {
