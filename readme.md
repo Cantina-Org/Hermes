@@ -17,6 +17,26 @@ Cloner votre [fork](https://github.com/Matyu9/Hermes/fork) de Hermes.
 Mettre la variable `debug` à `true` dans `server/index.js` (ligne 1).
 
 ### Étapes 3:
+Créer un fichier `server/config.json` à la racine du projet Néphélées.
+
+### Étapes 4:
+Remplisser le fichier `server/config.json` avec ça:
+```json
+{
+    "database": [
+        {
+            "database_username": "",
+            "database_password": "",
+            "database_addresse": "",
+            "database_port": ""
+        }
+    ],
+    "port": 3002
+}
+``` 
+Compléter les champs de la catégorie `database` avec les identifiants de votre base de données.
+
+### Étapes 5:
 Exécuter `npm i` à la racine du projet.
 
 ### Étapes 4:
