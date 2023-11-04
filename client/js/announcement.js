@@ -20,10 +20,13 @@ socket.on('connect', function() {
 });
 
 socket.on('announcement-receive-first', (data) => {
-    console.log(data)
     for (let element of data) {
-        addMessage(element.content, element.time + ' • ' + element.author, element.token)
+        addMessage(element.content, element.time + ' • ' + element.author, element.token);
     }
+});
+
+socket.on('announcement-receive-new', (data) => {
+    addMessage(data.content, data.time + ' • ' + data.author, data.token);
 });
 
 socket.on('login-error', (data) => {

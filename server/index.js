@@ -144,7 +144,7 @@ serverSocket.on('connection', (socket) => {
                 if (results[0].admin) {
                     allAnnouncement.push({content: data.content, time: prettyTime(Date.now()), author: results[0].user_name, token: token});
                     saveAnnouncement(allAnnouncement);
-                    void broadcastAnnouncement(data.content, prettyTime(Date.now()), results[0].user_name, data.token, userLogged);
+                    void broadcastAnnouncement(data.content, prettyTime(Date.now()), results[0].user_name, token, userLogged);
                 }
             } catch (error) {
                 console.log('Utilisateur non authentifié ou pas administrateur, non sauvegarde de l\'annonce!')
