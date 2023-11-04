@@ -39,10 +39,10 @@ Compléter les champs de la catégorie `database` avec les identifiants de votre
 ### Étapes 5:
 Exécuter `npm i` à la racine du projet.
 
-### Étapes 4:
+### Étapes 6:
 Lancer le fichier `server/index.js` via votre éditeur de code. (Vous devez exécuter le fichier depuis le dossier `server`).
 
-### Étapes 5:
+### Étapes 7:
 Rendez-vous sur la page `[host:port]/debug/choose_user` pour choisir l'utilisateur que vous utiliserez.
 
 *** 
