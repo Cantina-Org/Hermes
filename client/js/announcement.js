@@ -14,13 +14,16 @@ socket.on('connect', function() {
     if (!getCookie('token')){
         socket.emit('get-cerbere-fqdn');
     } else {
-        socket.emit('login', {userToken: getCookie('token'), privateMessage: false});
+        socket.emit('login', {userToken: getCookie('token'), privateMessage: false, announcement: true});
     }
 
 });
 
-socket.on('announcement-receive', (data) => {
-
+socket.on('announcement-receive-first', (data) => {
+    console.log(data)
+    for (let element of data) {
+        addMessage(element.content, element.time + ' • ' + element.author, element.token)
+    }
 });
 
 socket.on('login-error', (data) => {
@@ -57,3 +60,24 @@ addEventListener('submit', (event) => {
     socket.emit('announcement-send', data);
     messageInput.value = '';
 });
+
+
+function addMessage(content, time, token){
+    const messageFeed = document.getElementById('message-feed');
+    const messageElement = document.createElement('p');
+
+    const messageTime = document.createElement('a');
+    messageTime.setAttribute('class', 'message-time');
+    messageTime.innerText = time;
+    messageTime.href = '/private/?receiver='+token;
+
+    const messageContent = document.createElement('p');
+    messageContent.setAttribute('class', 'message-content');
+    messageContent.innerText = content;
+
+    messageElement.appendChild(messageTime);
+    messageElement.appendChild(messageContent);
+
+    messageFeed.appendChild(messageElement);
+    messageFeed.scrollTo(0, messageFeed.scrollHeight);
+}

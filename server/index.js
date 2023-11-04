@@ -85,6 +85,8 @@ serverSocket.on('connection', (socket) => {
                     queryDatabase(`SELECT user_name, token FROM cantina_administration.user`, (results) => {
                         socket.emit('user-list', {userList: results});
                     });
+                } else if (data.announcement){
+                      socket.emit('announcement-receive-first', allAnnouncement)
                 } else {
                     globalMessages.forEach((msg) => {
                         sendMessage(socket, msg.content, msg.time, msg.author, null, token);
