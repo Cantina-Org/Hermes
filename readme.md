@@ -1,5 +1,7 @@
 # Hermes
 
+# Hermes va bientôt subir de une refonte totale! Pour la sécurité de vos appareils, veuillez éviter d'installer ce service ! 
+
 Hermes est le `chat` en ligne de la suite cantina
 
 ### ⚠️: Installer Hermes peut causer des problèmes sur votre machine si vous faites de mauvaises manipulations ! À vos risques et périls 😆 !
